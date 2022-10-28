@@ -5,9 +5,12 @@ The goal of the project is to develop a machine learning application considering
 
 ![CRISP-ML](images/CRISP-ML.png)
 
+## How to set up 
+Firstly you have to clone the repository on your local device. Afterwards you can create the predefined environment by using "conda enc create -f environment.yml".
+
+Now the set up is ready to use and you can run the file "main.py". 
 
 ## Data Engineering
-
 
 ## ML-Model Engineering
 
