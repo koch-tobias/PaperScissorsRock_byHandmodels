@@ -1,0 +1,31 @@
+name: env_name
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip
+  # Code formatting
+
+  # Logging
+  - loguru
+  # Jupyter Notebook
+  - ipykernel
+  - ipywidgets
+  # Natural Language processing
+  - nltk
+  # Data analysis
+  - scikit-learn
+  - wordcloud
+  # Data handling
+  - numpy
+ 
+
+  # Pip installationen
+  - pip:
+    # Data handling
+    - pandas
+    # Data analysis
+    - pandas-profiling
+    # Dashboarding
+    - streamlit
