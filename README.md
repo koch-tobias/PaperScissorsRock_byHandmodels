@@ -3,6 +3,8 @@ This project contains the source code and scientific work for the master project
 
 The goal of the project is to develop a machine learning application considering the three steps Data Engineering, ML Model Engineering and ML Model Evaluation, which are part of the Deep Learning Life Cycle.
 
+![CRISP-ML](images/CRISP-ML.png)
+
 
 ## Data Engineerung
 
