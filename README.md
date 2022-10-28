@@ -5,9 +5,8 @@ The goal of the project is to develop a machine learning application considering
 A separate research question is processed for each step but our overall goal is to develop ... 
 
 <p float="left">
-  <img src="mages/CRISP-ML.png" width="300" />
+  <img src="images/CRISP-ML.png" width="300" />
   <img src="images/rock-paper-scissors-game-rules.png" width="300" /> 
-  <img src="/img3.png" width="100" />
 </p>
 
 ## How to set up 
