@@ -20,10 +20,10 @@ import matplotlib.pyplot as plt
 # ## To do: Analyzing the datasets
 
 # %% [markdown]
-# ## To do: Combining the datasets? (If yes, saving in a new folder)
+# ## To do: Combining the datasets and saving in a new folder
 
 # %% [markdown]
-# ## To do: Transform images to same size (Standardizing images)
+# ## To do: Transform images to same size (Standardizing images) (which size do we need for the model?)
 
 # %% [markdown]
 # ## To do: Transform images to same color?
@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 
 # %% [markdown]
 # ## To do: Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) ? (Maybe if need more data or more diverse data)
+# ## If yes, storing in new folder
 
 # %%
 
