@@ -2,8 +2,7 @@
 # # **Data engineering**
 
 # %% [markdown]
-# ## **Research question**
-# To do: Searching for a research question
+#  Research question: "Which data augmentation and data formatting methods could be useful for classifying images of "Rock, Paper, Scissors“ hand signs?"
 
 # %% [markdown]
 # ## Imports
@@ -14,26 +13,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # %% [markdown]
-# ## To do: Loading the datasets
+# ## To do: Function to load the datasets (Satyam)
 
 # %% [markdown]
-# ## To do: Analyzing the datasets
+# ## To do: Analyzing the datasets (Satyam)
 
 # %% [markdown]
-# ## To do: Combining the datasets and saving in a new folder
+# ## To do: Function to transform images to same size (Satyam)
 
 # %% [markdown]
-# ## To do: Transform images to same size (Standardizing images) (which size do we need for the model?)
+# ## To do: Combining the datasets and saving in a new folder (Satyam)
+
 
 # %% [markdown]
-# ## To do: Transform images to same color?
+# ## To do: Function for Data preprocessing 
+
 
 # %% [markdown]
-# ## To do: Image normalization? (Scaling pixels)
-
-# %% [markdown]
-# ## To do: Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) ? (Maybe if need more data or more diverse data)
-# ## If yes, storing in new folder
+# ## To do: Function for Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) 
 
 # %%
 
