@@ -9,7 +9,7 @@ A separate research question is processed for each step but our overall goal is 
 </p>
 
 ## Set up 
-Firstly you have to clone the repository on your local device. Afterward you can create the predefined environment by using "conda enc create -f environment.yml".
+Firstly you have to clone the repository on your local device. Afterward you can create the predefined environment by using "conda env create -f environment.yml".
 
 Now you can run the file "main.py". 
 
