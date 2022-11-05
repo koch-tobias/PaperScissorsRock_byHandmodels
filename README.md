@@ -37,7 +37,7 @@ For our project we combined the following three subdataset with in total 7477 im
   </p>
 
 ## Data Engineering
-
+In this part we want to consider the research question "Which data augmentation methods can increase the model's performance in classifying images of „Rock, Paper, Scissors“ hand signs?"
 ## ML-Model Engineering
 In this part we want to consider the research question "Can transfer learning bring a benefit on the performance of CNN models for Rock, Paper, Scissors?". 
 
