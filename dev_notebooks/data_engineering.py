@@ -7,14 +7,14 @@
 # %% [markdown]
 # ## Imports
 import os
-import numpy as np
+#import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import torch
+#import torch
 import torchvision.transforms as T
 from PIL import Image
-from torch import nn
-import pandas as pd
+#from torch import nn
+#import pandas as pd
 import os
 import shutil
 import splitfolders
