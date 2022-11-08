@@ -17,6 +17,7 @@ from torch import nn
 import pandas as pd
 import os
 import shutil
+import splitfolders
 #sys.path.append('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels')
 
 # %% [markdown]
@@ -202,6 +203,16 @@ def add_new_dataset(dataset_path: str):
     print("Dataset successfully added!")
 
 # %% [markdown]
+# ## Split dataset
+def split():
+    src = '../data_combined/dataset_without_split'
+    dst = '../data_combined/dataset_splitted'
+    splitfolders.ratio(src, output=dst, seed=1337, ratio=(.7, 0.1,0.2)) 
+
+
+# %% 
+
+# %% [markdown]
 # ## To do: Function for Data preprocessing 
 
 
@@ -226,6 +237,15 @@ if add_dataset == True:
     add_new_dataset(dataset_path=dir_new_dataset)
 else: 
     print("Datasets are already combined!")
+
+# %%
+# Split data into train, validation and testset 
+split_dataset = False
+
+if split_dataset == True:
+    split()
+else: 
+    print("Datasets is already splitted!")
 
 # %%
 # Analyzing the original datasets
