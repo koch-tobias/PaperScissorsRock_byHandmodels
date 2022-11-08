@@ -79,7 +79,7 @@ def count_subfolder(folder_path: str):
 
 # %%
 def analyze_dataset(dataset_dir):
-    subfolder = ['test','train','valid']
+    subfolder = ['test','train','val']
     subfolder_labels = ['rock','paper','scissors']
     
  
@@ -132,44 +132,12 @@ def analyze_dataset(dataset_dir):
 
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
 
-
-# %% [markdown]
-# ## To do: Function to transform images to same size (Satyam)
-def transform_img():
-    subfolder = ['rock','paper','scissors']
-    for i in subfolder:
-        x = loading(i)
-        for img in x:
-            if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")):
-                img = Image.open(r"/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_original/Combined_dataset/"+i+"/"+img)
-
-                width, height = img.size
-                left = 4
-                top = height / 5
-                right = 154
-                bottom = 3 * height / 5
-                im1 = img.crop((left, top, right, bottom))
-                newsize = (300, 300)
-                im1 = im1.resize(newsize)
-        print("reshaped {0} image size: {1}".format(i,im1.size))
-transform_img()
-
-def transform_img():
-    subfolder = ['rock', 'paper', 'scissors']
-    for i in subfolder:
-        x = loading(i)
-        for img in x:
-            img = mpimg.imread("/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_original/Combined_dataset/"+i+"/"+img)
-            # np.asarray(img).shape
-            resized_imgs = [T.Resize(size=size)(img) for size in [32,128]]
-            plot(resized_imgs,col_title=["32x32","128x128"])
-
 # %% [markdown]
 # ## Combining the datasets and saving in a new folder (Satyam)
 
 # %% 
 def add_new_dataset(dataset_path: str):
-    split = ['test','train','valid']
+    split = ['test','train','val']
     labels = ['rock','paper','scissors']
     target_path = '../data_combined/dataset_witout_split/'
      
@@ -210,11 +178,42 @@ def split():
     splitfolders.ratio(src, output=dst, seed=1337, ratio=(.7, 0.1,0.2)) 
 
 
-# %% 
+# %% [markdown]
+# ## To do: Function to transform images to same size (Satyam)
+def transform_img():
+    subfolder = ['rock','paper','scissors']
+    for i in subfolder:
+        x = loading(i)
+        for img in x:
+            if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")):
+                img = Image.open(r"/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_original/Combined_dataset/"+i+"/"+img)
+
+                width, height = img.size
+                left = 4
+                top = height / 5
+                right = 154
+                bottom = 3 * height / 5
+                im1 = img.crop((left, top, right, bottom))
+                newsize = (300, 300)
+                im1 = im1.resize(newsize)
+        print("reshaped {0} image size: {1}".format(i,im1.size))
+transform_img()
+
+def transform_img():
+    subfolder = ['rock', 'paper', 'scissors']
+    for i in subfolder:
+        x = loading(i)
+        for img in x:
+            img = mpimg.imread("/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_original/Combined_dataset/"+i+"/"+img)
+            # np.asarray(img).shape
+            resized_imgs = [T.Resize(size=size)(img) for size in [32,128]]
+            plot(resized_imgs,col_title=["32x32","128x128"])
+
 
 # %% [markdown]
 # ## To do: Function for Data preprocessing 
 
+# %%
 
 # %% [markdown]
 # ## To do: Function for Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) 
