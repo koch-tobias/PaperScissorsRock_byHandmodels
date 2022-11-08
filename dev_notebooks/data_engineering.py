@@ -21,7 +21,7 @@ import splitfolders
 #sys.path.append('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels')
 
 # %% [markdown]
-# ## Function to load the datasets (Satyam)
+# ## Function to load the datasets
 def loading(folder_name: str):
     direc = os.path.join(
         folder_name)
@@ -38,7 +38,6 @@ def plot_image_grid(images, labels, subfolder):
 
     f, axarr = plt.subplots(len(subfolder),len(labels))
     plt.rc('font', **font)
-    #plt.subplots_adjust(left=0.3)
 
     count_img = 0
     for i in range(len(subfolder)):
@@ -75,7 +74,7 @@ def count_subfolder(folder_path: str):
     return max(num_subfolders)
 
 # %% [markdown]
-## Analyzing the datasets (Satyam)
+## Analyzing the datasets
 
 # %%
 def analyze_dataset(dataset_dir):
@@ -133,7 +132,7 @@ def analyze_dataset(dataset_dir):
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
 
 # %% [markdown]
-# ## Combining the datasets and saving in a new folder (Satyam)
+# ## Combining the datasets and saving in a new folder
 
 # %% 
 def add_new_dataset(dataset_path: str):
@@ -179,7 +178,7 @@ def split():
 
 
 # %% [markdown]
-# ## To do: Function to transform images to same size (Satyam)
+# ## To do: Function to transform images to same size
 def transform_img():
     subfolder = ['rock','paper','scissors']
     for i in subfolder:
@@ -256,7 +255,6 @@ analyze_dataset("../data_combined")
 
 # %%
 # Transform the combined dataset
-
 transform_img()
 
 
