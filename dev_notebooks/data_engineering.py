@@ -210,18 +210,10 @@ def transform_img():
 
 
 # %% [markdown]
-# ## To do: Function for Data preprocessing 
-
-# %%
-
-# %% [markdown]
 # ## To do: Function for Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) 
 
 # %%
 
-
-# %% [markdown]
-# ## To do: Function for Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) 
 
 # %% [markdown]
 # ## Main-method
