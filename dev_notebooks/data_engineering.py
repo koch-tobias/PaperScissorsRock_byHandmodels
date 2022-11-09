@@ -196,7 +196,6 @@ def transform_img():
                 newsize = (300, 300)
                 im1 = im1.resize(newsize)
         print("reshaped {0} image size: {1}".format(i,im1.size))
-transform_img()
 
 def transform_img():
     subfolder = ['rock', 'paper', 'scissors']
@@ -207,6 +206,41 @@ def transform_img():
             # np.asarray(img).shape
             resized_imgs = [T.Resize(size=size)(img) for size in [32,128]]
             plot(resized_imgs,col_title=["32x32","128x128"])
+
+# %%
+def rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted"):
+    #Convert all rgba images as rbg images and replace it in the dataset
+    split = ['test','train','val']
+    labels = ['rock','paper','scissors']
+    folders, num_folders = loading(dir_dataset)
+
+    for folder in folders:
+        if folder in split:
+            dir_folder = dir_dataset + "/" + folder
+            subfolders, num_subfolders = loading(dir_folder)
+            for subfolder in subfolders:
+                if subfolder in labels:
+                    dir_subfolder = dir_folder + "/" + subfolder
+                    images, num_images = loading(dir_subfolder)
+                    for image in images:
+                        dir_images = dir_subfolder + "/" + image
+                        with Image.open(dir_images) as img:
+                            if img.mode == "RGBA":
+                                img_rgb = img.convert("RGB")
+                                img_rgb.save(dir_images)
+                            else:
+                                continue
+        elif folder in labels:
+            dir_folder = dir_dataset + "/" + folder
+            images, num_images = loading(dir_folder)
+            for image in images:
+                dir_images = dir_subfolder + "/" + image
+                with Image.open(dir_images) as img:
+                    if img.mode == "RGBA":
+                        img_rgb = img.convert("RGB")
+                        img_rgb.save(dir_images)
+        else:
+            continue
 
 
 # %% [markdown]
@@ -246,8 +280,13 @@ analyze_dataset("../data_original")
 analyze_dataset("../data_combined")
 
 # %%
+# Transform RGBA images to RGB Images
+rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted")
+
+# %%
 # Transform the combined dataset
 transform_img()
+
 
 
 
