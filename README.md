@@ -2,7 +2,7 @@
 This project contains the source code and scientific work for the master project "Explainable Machine Learning (xAI-Proj-M)" at the University of Bamberg. 
 
 The goal of the project is to develop a machine learning application considering the three steps data engineering, ML model engineering and ML model evaluation, which are part of the deep learning life cycle.
-A separate research question is processed for each step but our overall goal is to detect the hand signs based on images.
+A separate research question is processed for each step but our overall goal is to detect the hand signs (paper, rock, scissors) based on images.
 
 <p align="center">
   <img width="300" src="images/CRISP-ML.png">
