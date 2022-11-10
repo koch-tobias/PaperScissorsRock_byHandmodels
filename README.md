@@ -38,22 +38,22 @@ It also outputs predictions for random images from the validation dataset.
 You can change this setting in the main.py file.
 
 These following options are available:
-  1. Train new transfer learning model:
-    a) Set the boole variable "train_new_transferlearning_model" = True 
-    b) Set the hyperparameter values you want to use
-    c) Save the changes
-    d) Run the main.py file again
-  2. Evaluate an existing model:
-    a) Change the path for the variable "model_folder" to your model you want to evaluate
-    b) Set the boole variable "evaluate_existing_model" = True
-    c) Set the number of images you want to evaluate in variable "num_images_val"
-    d) Save the changes
-    e) Run the main.py file again
-  3. Make prediction on a single image:
-    a) Change the path for the variable "single_image_path" to your image you want to classify
-    b) Set the boole variable "prediction_on_single_image" = True
-    c) Save the changes
-    d) Run the main.py file again
+  1. Train new transfer learning model: </br>
+    a) Set the boole variable "train_new_transferlearning_model" = True </br>
+    b) Set the hyperparameter values you want to use </br>
+    c) Save the changes </br>
+    d) Run the main.py file again </br>
+  2. Evaluate an existing model: </br>
+    a) Change the path for the variable "model_folder" to your model you want to evaluate </br>
+    b) Set the boole variable "evaluate_existing_model" = True </br>
+    c) Set the number of images you want to evaluate in variable "num_images_val" </br>
+    d) Save the changes </br>
+    e) Run the main.py file again </br>
+  3. Make prediction on a single image: </br>
+    a) Change the path for the variable "single_image_path" to your image you want to classify </br>
+    b) Set the boole variable "prediction_on_single_image" = True </br>
+    c) Save the changes </br>
+    d) Run the main.py file again </br>
 
 
 ## Dataset
