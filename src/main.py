@@ -11,13 +11,15 @@ if __name__ == "__main__":
     single_image_path = "data_own_images/paper_Tobi.jpg"
 
 
-    # Set parameters
+    # Set hyperparameters
     seed = 42
     learning_rate = 0.001
     epochs = 2
     dropout = 0.2
     num_workers = 2
     batch_size = 32
+
+    # Set parameter for evaluation
     num_images_val = 6
 
     # Set if you want to train a new model or evualate an existing model
