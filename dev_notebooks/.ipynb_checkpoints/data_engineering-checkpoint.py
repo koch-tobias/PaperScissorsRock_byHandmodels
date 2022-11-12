@@ -7,21 +7,17 @@
 # %% [markdown]
 # ## Imports
 import os
-import numpy as np
+#import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import torch
+#import torch
 import torchvision.transforms as T
 from PIL import Image
 #from torch import nn
-import pandas as pd
+#import pandas as pd
 import os
-import kornia
 import shutil
 import splitfolders
-from torchvision.transforms import transforms
-
-
 #sys.path.append('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels')
 
 # %% [markdown]
@@ -60,8 +56,8 @@ print(loading('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byH
 ## Function to print example images for the dataset
 
 # %%
-def plot_image_grid(images, labels, subfolder,dataset):
-    font = {'family' : 'sans-serif',
+def plot_image_grid(images, labels, subfolder):
+    font = {'family' : 'normal',
         'weight' : 'bold',
         'size'   : 12}
 
@@ -89,7 +85,6 @@ def plot_image_grid(images, labels, subfolder,dataset):
                 if count_img < len(labels):
                     axarr[i,n].set_title(labels[n], **font)
                 count_img = count_img + 1
-    plt.savefig('../images/'+dataset)
 
 # # %% [markdown]
 # # ## Function to get the number of subfolder in a folder
@@ -138,7 +133,9 @@ def analyze_dataset(dataset_dir):
                         img = Image.open(path + "/" + img)
                         temp_images.append(img)
                         count = count + 1
-            plot_image_grid(temp_images, subfolder_labels,subfolder=['no split'],dataset=dataset)
+            plot_image_grid(temp_images, subfolder_labels,subfolder=['no split'])
+
+
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
 
         else:
@@ -154,7 +151,7 @@ def analyze_dataset(dataset_dir):
                             img = Image.open(path + "/" + img)
                             temp_images.append(img)
                             count = count + 1
-            plot_image_grid(temp_images, subfolder_labels,subfolder,dataset)
+            plot_image_grid(temp_images, subfolder_labels,subfolder)
 
 
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
@@ -207,25 +204,25 @@ def split():
 
 # %% [markdown]
 # ## To do: Function to transform images to same size
-def transform_img():
-    subfolder = ['paper','rock','scissors']
-    for i in subfolder:
-        x = loading(i)
-        print(x)
-        for img in x:
-            if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")):
-                img = Image.open(r"/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/"+i+"/"+img)
+# def transform_img():
+#     subfolder = ['paper','rock','scissors']
+#     for i in subfolder:
+#         x = loading(i)
+#         print(x)
+#         for img in x:
+#             if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")):
+#                 img = Image.open(r"/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/"+i+"/"+img)
 
-                width, height = img.size
-                left = 4
-                top = height / 5
-                right = 154
-                bottom = 3 * height / 5
-                im1 = img.crop((left, top, right, bottom))
-                newsize = (300, 300)
-                im1 = im1.resize(newsize)
-        print("reshaped {0} image size: {1}".format(i,im1.size))
-print(transform_img())
+#                 width, height = img.size
+#                 left = 4
+#                 top = height / 5
+#                 right = 154
+#                 bottom = 3 * height / 5
+#                 im1 = img.crop((left, top, right, bottom))
+#                 newsize = (300, 300)
+#                 im1 = im1.resize(newsize)
+#         print("reshaped {0} image size: {1}".format(i,im1.size))
+# print(transform_img())
 # def transform_img():
 #     subfolder = ['rock', 'paper', 'scissors']
 #     for i in subfolder:
@@ -274,63 +271,10 @@ def rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted"):
 
 # %% [markdown]
 # ## To do: Function for Data Augmentation (Shifting, flipping, changing brightness, rotation, adding noise,..) 
-def shift_image(): #shift image in different areas like forward, backward ,top
-    img = np.array(Image.open('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/paper/0a3UtNzl5Ll3sq8K.png'))
-
-    img_tensor = torch.tensor(img.transpose([2, 0, 1])).float()
-
-    affine = kornia.augmentation.RandomAffine(degrees=0, translate=(0.3, 0.3), padding_mode='border')
-    fig = plt.figure(figsize=(15, 15))
-    for i in range(4):
-        for j in range(4):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            img_translated = affine(img_tensor)
-            ax.imshow(img_translated.squeeze().permute(1, 2, 0).byte())
-shift_image()
-
-def horizontal_flip():
-    img = Image.open('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/paper/0a3UtNzl5Ll3sq8K.png')
-    for i in range(4):
-        for j in range(4):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            transform=transforms.Compose([transforms.RandomHorizontalFlip(p=0.9)])
-            img=transform(img)
-            ax.imshow(img)
-horizontal_flip()
-
-#random rotation
-def rotation():
-    img = Image.open('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/paper/0a3UtNzl5Ll3sq8K.png')
-    for i in range(4):
-        for j in range(4):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            transform = T.RandomRotation(degrees=(60, 90))
-            img=transform(img)
-            ax.imshow(img)
-rotation()
-
-#Gausian Blur
-def gausian():
-    img = Image.open('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/paper/0a3UtNzl5Ll3sq8K.png')
-    for i in range(4):
-        for j in range(4):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            transform = T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9))
-            img=transform(img)
-            ax.imshow(img)
-gausian()
+# def shift_image(dir_dataset='../data_combined/dataset_without_split/paper'):
+        
 
 # # %%
-#Random crop
-def crop():
-    img = Image.open('/Users/satyamapantagomeza/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/dataset_without_split/paper/0a3UtNzl5Ll3sq8K.png')
-    for i in range(4):
-        for j in range(4):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            transform = T.RandomCrop((250,300), padding=50)
-            img=transform(img)
-            ax.imshow(img)
-crop()
 
 
 # # %% [markdown]
