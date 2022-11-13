@@ -21,7 +21,8 @@ import kornia
 import shutil
 import splitfolders
 from torchvision.transforms import transforms
-#from skimage.util import random_noise
+from skimage.util import random_noise
+from tqdm import tqdm
 
 # %% [markdown]
 # ## Function to list and count the number of dircetories inside a folder
@@ -293,13 +294,14 @@ def random_crop(image_path:str):
     plt.show()
 
 # %%
-def noise(image_path:str, sigma:float):
+def noise(image_path:str):
     img = Image.open(image_path)
-    for i in range(3):
-        for j in range(3):
-            ax = plt.subplot(4, 4, i*4 + j +1)
-            img = random_noise(img, sigma**2)
-            ax.imshow(img)
+    im_arr = np.asarray(img)
+    noise_img = random_noise(im_arr, mode='poisson', seed=42, clip=False)
+    noise_img = (255*noise_img).astype(np.uint8)
+    image = Image.fromarray(noise_img)
+
+    plt.imshow(image)
     plt.show()
 
 # %%
@@ -315,7 +317,7 @@ def plot_data_augmentation(image_path:str):
     print("Image after shifting:")
     shift_image(image_path)
     print("Image after adding noise:")
-    noise(image_path,sigma=0.177)
+    noise(image_path)
 
 # %%
 plot_data_augmentation(image_path="../data_combined/dataset_without_split/paper/nasmi_198.png")
@@ -324,7 +326,7 @@ plot_data_augmentation(image_path="../data_combined/dataset_without_split/paper/
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
 
 # %%
-def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_shift=False):
+def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False):
     train_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/train")
     val_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/val")
 
@@ -333,40 +335,54 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
     val_x = []
     val_y = []
     
-    for img in train_dataset:
+    for img in tqdm(train_dataset):
         newsize = (300, 300)
         img_resize = img[0].resize(newsize)
-        train_x.append(np.array(img_resize))
+        train_x.append(np.asarray(img_resize))
         train_y.append(img[1])
         if img_crop == True:
-            transform = T.RandomCrop((250,300), padding=50)
+            transform = T.RandomCrop((300,300), padding=50)
             img_new=transform(img_resize)
-            train_x.append(img_new)
+            train_x.append(np.asarray(img_new))
             train_y.append(img[1])
         elif img_gausian == True:
             transform = T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9))
             img_new=transform(img_resize)
-            train_x.append(img_new)
+            train_x.append(np.array(img_new))
             train_y.append(img[1])
         elif img_rotation == True:
             transform = T.RandomRotation(degrees=(60, 90))
             img_new=transform(img_resize)
-            train_x.append(img_new)
+            train_x.append(np.array(img_new))
             train_y.append(img[1])
         elif img_hflip == True:
             transform=transforms.Compose([transforms.RandomHorizontalFlip(p=0.9)])
             img_new=transform(img_resize)
-            train_x.append(img_new)
+            train_x.append(np.array(img_new))
             train_y.append(img[1])
+        elif img_noise == True:
+            im_arr = np.asarray(img_resize)
+            noise_img = random_noise(im_arr, mode='poisson', seed=42, clip=False)
+            noise_img = (255*noise_img).astype(np.uint8)
+            img_new = Image.fromarray(noise_img)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])  
+        elif img_shift == True:
+            im_arr = np.asarray(img_resize)
+            img_tensor = torch.tensor(im_arr.transpose([2, 0, 1])).float()
+            affine = kornia.augmentation.RandomAffine(degrees=0, translate=(0.3, 0.3), padding_mode='border')                      
+            shift_img = affine(img_tensor)
+            img_new = shift_img.squeeze().permute(1, 2, 0).byte()
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])             
         else:
             continue
     
     for img in val_dataset:
         newsize = (300, 300)
         img_resize = img[0].resize(newsize)
-        val_x.append(img_resize)
+        val_x.append(np.array(img_resize))
         val_y.append(img[1])
-        break
 
     train_x = np.array(train_x)
     train_y = np.array(train_y)
@@ -375,6 +391,7 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
 
     return train_x, val_x, train_y, val_y
 
+train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
 
 # %% [markdown]
 # ## Main-method
