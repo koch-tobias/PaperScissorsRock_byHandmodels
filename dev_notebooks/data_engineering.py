@@ -23,6 +23,7 @@ import splitfolders
 from torchvision.transforms import transforms
 from skimage.util import random_noise
 from tqdm import tqdm
+import random
 
 # %% [markdown]
 # ## Function to list and count the number of dircetories inside a folder
@@ -66,7 +67,7 @@ def plot_image_grid(images, labels, subfolder,dataset):
                 if count_img < len(labels):
                     axarr[i,n].set_title(labels[n], **font)
                 count_img = count_img + 1
-    plt.savefig('../images/'+dataset)
+    plt.savefig('../images/datasets/'+ dataset + '.png')
 
 # %% [markdown]
 # ## Function to get the number of subfolder in a folder
@@ -109,12 +110,13 @@ def analyze_dataset(dataset_dir):
                 path = dataset_dir + "/" + dataset + "/" + label
                 images, num_images = loading(path)
                 totel_num_images = totel_num_images + num_images
+                rand = random.randrange(0, len(images))
 
                 for img in images:
-                    if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count < 1:
+                    if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count == rand:
                         img = Image.open(path + "/" + img)
                         temp_images.append(img)
-                        count = count + 1
+                    count = count + 1
             plot_image_grid(temp_images, subfolder_labels,subfolder=['no split'],dataset=dataset)
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
 
@@ -125,12 +127,12 @@ def analyze_dataset(dataset_dir):
                     path = dataset_dir + "/" + dataset + "/" + folder + "/" + label
                     images, num_images = loading(path)
                     totel_num_images = totel_num_images + num_images
-
+                    rand = random.randrange(0, len(images))
                     for img in images:
-                        if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count < 1:
+                        if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count == rand:
                             img = Image.open(path + "/" + img)
                             temp_images.append(img)
-                            count = count + 1
+                        count = count + 1
             plot_image_grid(temp_images, subfolder_labels,subfolder,dataset)
 
 
@@ -249,6 +251,7 @@ def shift_image(image_path:str):
             ax = plt.subplot(4, 4, i*4 + j +1)
             img_translated = affine(img_tensor)
             ax.imshow(img_translated.squeeze().permute(1, 2, 0).byte())
+    plt.savefig("../images/data_augmentation/example_shift.png")
     plt.show()
 
 # %%
@@ -260,6 +263,7 @@ def horizontal_flip(image_path:str):
             transform=transforms.Compose([transforms.RandomHorizontalFlip(p=0.9)])
             img=transform(img)
             ax.imshow(img)
+    plt.savefig("../images/data_augmentation/example_hflip.png")
     plt.show()
 
 # %%
@@ -271,6 +275,7 @@ def random_rotation(image_path:str):
             transform = T.RandomRotation(degrees=(60, 90))
             img=transform(img)
             ax.imshow(img)
+    plt.savefig("../images/data_augmentation/example_rotation.png")
     plt.show()
 # %%
 def gausian_blur(image_path:str):
@@ -281,6 +286,7 @@ def gausian_blur(image_path:str):
             transform = T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9))
             img=transform(img)
             ax.imshow(img)
+    plt.savefig("../images/data_augmentation/example_gaus.png")
     plt.show()
 # %%
 def random_crop(image_path:str):
@@ -291,6 +297,7 @@ def random_crop(image_path:str):
             transform = T.RandomCrop((250,300), padding=50)
             img=transform(img)
             ax.imshow(img)
+    plt.savefig("../images/data_augmentation/example_crop.png")
     plt.show()
 
 # %%
@@ -302,6 +309,7 @@ def noise(image_path:str):
     image = Image.fromarray(noise_img)
 
     plt.imshow(image)
+    plt.savefig("../images/data_augmentation/example_noise.png")
     plt.show()
 
 # %%
