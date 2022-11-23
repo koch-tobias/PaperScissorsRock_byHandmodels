@@ -101,10 +101,9 @@ def analyze_dataset(dataset_dir):
     for dataset in datasets:
         totel_num_images = 0
         temp_images = []
-        
         if dataset == '.DS_Store':
             continue
-        elif count_subfolder(folder_path=(dataset_dir + "/" + dataset)) <= 1:
+        elif count_subfolder(folder_path=(dataset_dir)) == 2:
             for label in subfolder_labels:
                 count = 0
                 path = dataset_dir + "/" + dataset + "/" + label
@@ -113,13 +112,25 @@ def analyze_dataset(dataset_dir):
                 rand = random.randrange(0, len(images))
 
                 for img in images:
-                    if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count == rand:
+                    if count == rand:
                         img = Image.open(path + "/" + img)
                         temp_images.append(img)
                     count = count + 1
             plot_image_grid(temp_images, subfolder_labels,subfolder=['no split'],dataset=dataset)
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
-
+        elif count_subfolder(folder_path=(dataset_dir)) == 1:
+            count = 0
+            path = dataset_dir + "/" + dataset
+            images, num_images = loading(path)
+            totel_num_images = totel_num_images + num_images
+            rand = random.randrange(0, len(images))
+            for img in images:
+                if count == rand:
+                    img = Image.open(path + "/" + img)
+                    temp_images.append(img)
+                count = count + 1
+            plot_image_grid(temp_images, subfolder_labels,subfolder=['no split'],dataset=dataset)
+            print("Total number of images in " + dataset + ": " + str(totel_num_images))
         else:
             for folder in subfolder:
                 for label in subfolder_labels:
@@ -129,15 +140,43 @@ def analyze_dataset(dataset_dir):
                     totel_num_images = totel_num_images + num_images
                     rand = random.randrange(0, len(images))
                     for img in images:
-                        if (img.endswith(".png") or img.endswith(".jpg") or img.endswith(".jpeg")) and count == rand:
+                        if count == rand:
                             img = Image.open(path + "/" + img)
                             temp_images.append(img)
                         count = count + 1
             plot_image_grid(temp_images, subfolder_labels,subfolder,dataset)
-
-
             print("Total number of images in " + dataset + ": " + str(totel_num_images))
 
+# %% [markdown]
+# ## Analyzing the evaluation datasets
+def analyze_eval_dataset(dataset_dir):
+    images, num_images = loading(dataset_dir)
+    temp_images = []
+    num_samples = 16
+    rand = random.sample(range(0, len(images)), num_samples)
+    for i in range(num_samples):
+        count = 0
+        for img in images:
+            #print(str(count) + " == " + str(rand))
+            if count == rand[i]:
+                img = Image.open(dataset_dir + "/" + img)
+                temp_images.append(img)
+            count = count + 1
+    
+    # Plot the images
+    f, axarr = plt.subplots(4,4)
+    count_img = 0
+    #print(temp_images)
+    for i in range(4):
+        for n in range(4):
+            axarr[i,n].imshow(temp_images[count_img])
+            axarr[i,n].grid(False)     
+            axarr[i,n].set_xticks([])
+            axarr[i,n].set_yticks([])
+            count_img = count_img + 1 
+
+    plt.savefig("../images/datasets/sampels_evaldataset.png")
+    print("Total number of images in the eval dataset: " + str(num_images))
 # %% [markdown]
 # ## Combining the datasets and saving in a new folder
 
@@ -328,7 +367,7 @@ def plot_data_augmentation(image_path:str):
     noise(image_path)
 
 # %%
-plot_data_augmentation(image_path="../data_combined/dataset_without_split/paper/nasmi_198.png")
+plot_data_augmentation(image_path="../data_own_images/paper/IMG_5042.HEIC")
 
 # %% [markdown]
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
@@ -427,9 +466,14 @@ else:
 # Analyzing the original datasets
 analyze_dataset("../data_original")
 
+
 # %%
 # Analyzing the combined dataset
 analyze_dataset("../data_combined")
+
+# %%
+# Analyzing the eval datasets
+analyze_eval_dataset("../data_own_images")
 
 # %%
 # Transform RGBA images to RGB Images
