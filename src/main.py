@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Set hyperparameters
     seed = 42
     learning_rate = 0.001
-    epochs = 2
+    epochs = 10
     dropout = 0.2
     num_workers = 2
     batch_size = 32
@@ -22,11 +22,12 @@ if __name__ == "__main__":
     # Set parameter for evaluation
     num_images_val = 6
 
+
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = False
+    train_new_transferlearning_model = True
     train_new_baseline_model = False
     evaluate_existing_model = False
-    prediction_on_single_image = True
+    prediction_on_single_image = False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning... (This takes about 30 minutes per epoch)")

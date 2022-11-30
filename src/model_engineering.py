@@ -7,6 +7,7 @@ import torchvision
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from torchinfo import summary
 from tqdm.auto import tqdm
 from typing import Dict, List, Tuple
 from timeit import default_timer as timer 
@@ -26,26 +27,28 @@ import math
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, test_dir: str, weights, num_workers: int, batch_size: int):
+def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int):
 
     # Get the transforms used to create our pretrained weights
     auto_transforms = weights.transforms()
+    logger.info("Get the data transforms that were used to train the model on ImageNet:")
+    logger.info(auto_transforms)
 
-    # Create training and testing DataLoaders as well as get a list of class names
-    train_dataloader, test_dataloader, class_names = create_dataloaders(train_dir=train_dir,
-                                                                                test_dir=test_dir,
+    # Create training and valing DataLoaders as well as get a list of class names
+    train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
+                                                                                val_dir=val_dir,
                                                                                 transform=auto_transforms, # perform same data transforms on our own data as the pretrained model
                                                                                 batch_size=batch_size, # set mini-batch size to 32
                                                                                 num_workers=num_workers) 
 
 
-    return train_dataloader, test_dataloader, class_names
+    return train_dataloader, val_dataloader, class_names
 
 #########################################################################################
 #####                          Function to create DataLoader                        #####
 #########################################################################################
 def create_dataloaders(train_dir: str, 
-                            test_dir: str, 
+                            val_dir: str, 
                             transform: transforms.Compose, 
                             batch_size: int, 
                             num_workers: int=1
@@ -53,7 +56,7 @@ def create_dataloaders(train_dir: str,
     
     # Use ImageFolder to create dataset(s)
     train_data = datasets.ImageFolder(train_dir, transform=transform)
-    test_data = datasets.ImageFolder(test_dir, transform=transform)
+    val_data = datasets.ImageFolder(val_dir, transform=transform)
    
     # Get class names
     class_names = train_data.classes
@@ -65,46 +68,48 @@ def create_dataloaders(train_dir: str,
                                     num_workers=num_workers,
                                     pin_memory=True
                                 )
-    test_dataloader = DataLoader(test_data,
+    val_dataloader = DataLoader(val_data,
                                     batch_size=batch_size,
                                     shuffle=True,
                                     num_workers=num_workers,
                                     pin_memory=True
                                 )
 
-    return train_dataloader, test_dataloader, class_names
+    return train_dataloader, val_dataloader, class_names
 
 #########################################################################################
 #####                      Function to load pretrainend model                       #####
 #########################################################################################
-def load_pretrained_efficientNet_B0():
+def load_pretrained_model(device: torch.device):
 
     # Load best available weights from pretraining on ImageNet
-    weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
     
     # Load pretrained model with selected weights
-    model = torchvision.models.efficientnet_b0(weights=weights)
+    model = torchvision.models.EfficientNet_V2_L_Weights(weights=weights).to(device)
+
 
     return model, weights
 
 #########################################################################################
 #####         Function to recreate the classifier layer of the model                #####
 #########################################################################################
-def recreate_classifier_layer(model: torch.nn.Module, dropout: int, class_names: list):
+def recreate_classifier_layer(model: torch.nn.Module, dropout: int, class_names: list, seed:int, device: torch.device):
     # Freeze all base layers in the "features" section of the model 
     # by setting requires_grad=False
     for param in model.features.parameters():
         param.requires_grad = False
 
     # Set the manual seeds
-    torch.manual_seed(42)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
 
     # Recreate the classifier layer (one output unit for each class)
     model.classifier = torch.nn.Sequential(
                             torch.nn.Dropout(p=dropout, inplace=True), 
                             torch.nn.Linear(in_features=1280, 
                             out_features=len(class_names), 
-                            bias=True))
+                            bias=True)).to(device)
     return model
 
 #########################################################################################
@@ -132,10 +137,22 @@ def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
 #########################################################################################
 #####                     Function to save the trained model                        #####
 #########################################################################################
-def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict):
+def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict,batch_size:int):
     logger.info("Store model...")
     model_path = folderpath / ("model.pkl")
     results_path = folderpath / ("results.pkl")
+    summary_path = folderpath / ("summary.pkl")
+
+    # Print a summary using torchinfo (uncomment for actual output)
+    summary = summary(model=classifier_model, 
+                        input_size=(batch_size, 3, 224, 224), # make sure this is "input_size", not "input_shape"
+                        col_names=["input_size", "output_size", "num_params", "trainable"],
+                        col_width=20,
+                        row_settings=["var_names"]
+                        )
+
+    with open(summary_path, "wb") as filestore:
+        pickle.dump(summary, filestore)   
 
     with open(model_path, "wb") as filestore:
         pickle.dump(classifier_model, filestore)
@@ -181,14 +198,14 @@ def plot_loss_curves(results):
         results (dict): dictionary containing list of values, e.g.
             {"train_loss": [...],
              "train_acc": [...],
-             "test_loss": [...],
-             "test_acc": [...]}
+             "val_loss": [...],
+             "val_acc": [...]}
     """
     loss = results["train_loss"]
-    test_loss = results["test_loss"]
+    val_loss = results["val_loss"]
 
     accuracy = results["train_acc"]
-    test_accuracy = results["test_acc"]
+    val_accuracy = results["val_acc"]
 
     epochs = range(len(results["train_loss"]))
 
@@ -197,7 +214,7 @@ def plot_loss_curves(results):
     # Plot loss
     plt.subplot(1, 2, 1)
     plt.plot(epochs, loss, label="train_loss")
-    plt.plot(epochs, test_loss, label="test_loss")
+    plt.plot(epochs, val_loss, label="val_loss")
     plt.title("Loss")
     plt.xlabel("Epochs")
     plt.legend()
@@ -205,7 +222,7 @@ def plot_loss_curves(results):
     # Plot accuracy
     plt.subplot(1, 2, 2)
     plt.plot(epochs, accuracy, label="train_accuracy")
-    plt.plot(epochs, test_accuracy, label="test_accuracy")
+    plt.plot(epochs, val_accuracy, label="val_accuracy")
     plt.title("Accuracy")
     plt.xlabel("Epochs")
     plt.legend()
@@ -219,7 +236,8 @@ def pred_and_plot_image(model: torch.nn.Module,
                             image_path: str,
                             class_names: List[str] = None,
                             transform=None,
-                            ax=None):
+                            ax=None,
+                            device = torch.device):
 
     # Load in image and convert the tensor values to float32
     target_image = torchvision.io.read_image(str(image_path)).type(torch.float32)
@@ -231,6 +249,8 @@ def pred_and_plot_image(model: torch.nn.Module,
     if transform:
         target_image = transform(target_image)
 
+    model.to(device)
+
     # Turn on model evaluation mode and inference mode
     model.eval()
     with torch.inference_mode():
@@ -239,7 +259,7 @@ def pred_and_plot_image(model: torch.nn.Module,
 
         # Make a prediction on image with an extra dimension 
         # and send it to the target device
-        target_image_pred = model(target_image)
+        target_image_pred = model(target_image.to(device))
 
     # Convert logits -> prediction probabilities 
     # (using torch.softmax() for multi-class classification)
@@ -304,14 +324,13 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int):
     plot_loss_curves(model_results)
 
     # Make predictions on random images from validation dataset
-    val_dir = "../data_combined/dataset_splitted/val"
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
-    valid_image_path_list = list(Path(validation_folder).glob("*/*.*")) # get list all image paths from test data 
-    valid_image_path_sample = random.sample(population=valid_image_path_list, # go through all of the test image paths
+    valid_image_path_list = list(Path(validation_folder).glob("*/*.*")) # get list all image paths from val data 
+    valid_image_path_sample = random.sample(population=valid_image_path_list, # go through all of the val image paths
                                         k=num_images) # randomly select 'k' image paths to pred and plot
 
     font = {'family' : 'normal',
@@ -339,7 +358,8 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int):
 def train_step(model: torch.nn.Module, 
                     dataloader: torch.utils.data.DataLoader, 
                     loss_fn: torch.nn.Module, 
-                    optimizer: torch.optim.Optimizer
+                    optimizer: torch.optim.Optimizer,
+                    device:torch.device
                 ) -> Tuple[float, float]:
 
   # Put model in train mode
@@ -350,6 +370,8 @@ def train_step(model: torch.nn.Module,
 
   # Loop through data loader data batches
   for batch, (X, y) in enumerate(dataloader):
+
+      X, y = X.to(device), y.to(device)
 
       # 1. Forward pass
       y_pred = model(X)
@@ -376,64 +398,71 @@ def train_step(model: torch.nn.Module,
   train_acc = train_acc / len(dataloader)
   return train_loss, train_acc
 
-def test_step(model: torch.nn.Module, 
+def val_step(model: torch.nn.Module, 
               dataloader: torch.utils.data.DataLoader, 
-              loss_fn: torch.nn.Module
+              loss_fn: torch.nn.Module,
+              device:torch.device
               ) -> Tuple[float, float]:
 
   # Put model in eval mode
   model.eval() 
 
-  # Setup test loss and test accuracy values
-  test_loss, test_acc = 0, 0
+  # Setup val loss and val accuracy values
+  val_loss, valcc = 0, 0
 
   # Turn on inference context manager
   with torch.inference_mode():
       # Loop through DataLoader batches
       for batch, (X, y) in enumerate(dataloader):
+          
+          X, y = X.to(device), y.to(device)
 
           # 1. Forward pass
-          test_pred_logits = model(X)
+          val_pred_logits = model(X)
 
           # 2. Calculate and accumulate loss
-          loss = loss_fn(test_pred_logits, y)
-          test_loss += loss.item()
+          loss = loss_fn(val_pred_logits, y)
+          val_loss += loss.item()
 
           # Calculate and accumulate accuracy
-          test_pred_labels = test_pred_logits.argmax(dim=1)
-          test_acc += ((test_pred_labels == y).sum().item()/len(test_pred_labels))
+          val_pred_labels = val_pred_logits.argmax(dim=1)
+          valcc += ((val_pred_labels == y).sum().item()/len(val_pred_labels))
 
   # Adjust metrics to get average loss and accuracy per batch 
-  test_loss = test_loss / len(dataloader)
-  test_acc = test_acc / len(dataloader)
-  return test_loss, test_acc
+  val_loss = val_loss / len(dataloader)
+  val_acc = val_acc / len(dataloader)
+  return val_loss, val_acc
 
 def train(model: torch.nn.Module, 
             train_dataloader: torch.utils.data.DataLoader, 
-            test_dataloader: torch.utils.data.DataLoader, 
+            val_dataloader: torch.utils.data.DataLoader, 
             optimizer: torch.optim.Optimizer,
             loss_fn: torch.nn.Module,
             epochs: int,
-            folderpath: str
+            folderpath: str,
+            batch_size: int,
+            device: torch.device
             ) -> Dict[str, List]:
 
     # Create empty results dictionary
     results = {"train_loss": [],
                 "train_acc": [],
-                "test_loss": [],
-                "test_acc": []
+                "val_loss": [],
+                "val_acc": []
             }
 
-    # Loop through training and testing steps for a number of epochs
+    # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
         train_loss, train_acc = train_step(model=model,
                                             dataloader=train_dataloader,
                                             loss_fn=loss_fn,
-                                            optimizer=optimizer
+                                            optimizer=optimizer,
+                                            device=device
                                             )
-        test_loss, test_acc = test_step(model=model,
-            dataloader=test_dataloader,
-            loss_fn=loss_fn
+        val_loss, val_acc = val_step(model=model,
+            dataloader=val_dataloader,
+            loss_fn=loss_fn,
+            device=device
             )
 
         # Print out what's happening
@@ -441,27 +470,30 @@ def train(model: torch.nn.Module,
             f"Epoch: {epoch+1} | "
             f"train_loss: {train_loss:.4f} | "
             f"train_acc: {train_acc:.4f} | "
-            f"test_loss: {test_loss:.4f} | "
-            f"test_acc: {test_acc:.4f}"
+            f"val_loss: {val_loss:.4f} | "
+            f"val_acc: {val_acc:.4f}"
         )
 
         # Update results dictionary
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
-        results["test_loss"].append(test_loss)
-        results["test_acc"].append(test_acc)
+        results["val_loss"].append(val_loss)
+        results["val_acc"].append(val_acc)
 
 
-    model_folder = store_model(folderpath, model, results)
+    model_folder = store_model(folderpath, model, results,batch_size=batch_size)
 
     # Return the filled results at the end of the epochs
     return results, model_folder
 
 def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:float, epochs:int, dropout:float, num_workers:int, batch_size:int):
     train_dir = dataset_path + "/train"
-    test_dir = dataset_path + "/test"
+    val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
     model_name = "TransferLearning"
+
+    # Setup device agnostic code
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     dict_hyperparameters = {'seed': seed, 'learning_rate':learning_rate, 'epochs': epochs, 
                         'dropout':dropout, 'num_workers':num_workers,'batch_size': batch_size}
@@ -469,19 +501,22 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     folderpath = store_hyperparameters(target_dir_new_model,model_name=model_name,dict=dict_hyperparameters)
 
     # Load pretrained model, weights and the transforms
-    model, weights = load_pretrained_efficientNet_B0()
+    model, weights = load_pretrained_model(divice=device)
 
     # Load data
-    train_dataloader, test_dataloader, class_names = load_data(train_dir=train_dir,
-                                                                    test_dir=test_dir, 
+    train_dataloader, val_dataloader, class_names = load_data(train_dir=train_dir,
+                                                                    val_dir=val_dir, 
                                                                     weights=weights, 
                                                                     num_workers=num_workers, 
-                                                                    batch_size=batch_size)
+                                                                    batch_size=batch_size
+                                                                    )
 
     # Recreate classifier layer
     model = recreate_classifier_layer(model=model, 
                                             dropout=dropout, 
-                                            class_names=class_names)
+                                            class_names=class_names,
+                                            seed=seed,
+                                            divice=device)
 
     # Define loss and optimizer
     loss_fn = nn.CrossEntropyLoss()
@@ -489,6 +524,7 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
 
     # Set the random seeds
     torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
 
     # Start the timer
     start_time = timer()
@@ -496,11 +532,13 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     # Setup training and save the results
     results, model_folder = train(model=model,
                         train_dataloader=train_dataloader,
-                        test_dataloader=test_dataloader,
+                        val_dataloader=val_dataloader,
                         optimizer=optimizer,
                         loss_fn=loss_fn,
                         epochs=epochs,
-                        folderpath=folderpath
+                        folderpath=folderpath,
+                        batch_size=batch_size,
+                        device=device
                     )
 
 
