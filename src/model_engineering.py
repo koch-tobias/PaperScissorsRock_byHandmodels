@@ -80,21 +80,20 @@ def create_dataloaders(train_dir: str,
 #########################################################################################
 #####                      Function to load pretrainend model                       #####
 #########################################################################################
-def load_pretrained_model(device: torch.device):
+def load_pretrained_model(device):
 
     # Load best available weights from pretraining on ImageNet
     weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
     
     # Load pretrained model with selected weights
-    model = torchvision.models.EfficientNet_V2_L_Weights(weights=weights).to(device)
-
+    model = torchvision.models.efficientnet_v2_l(value=weights).to(device)
 
     return model, weights
 
 #########################################################################################
 #####         Function to recreate the classifier layer of the model                #####
 #########################################################################################
-def recreate_classifier_layer(model: torch.nn.Module, dropout: int, class_names: list, seed:int, device: torch.device):
+def recreate_classifier_layer(model: torch.nn.Module, dropout: int, class_names: list, seed: int, device):
     # Freeze all base layers in the "features" section of the model 
     # by setting requires_grad=False
     for param in model.features.parameters():
@@ -237,7 +236,8 @@ def pred_and_plot_image(model: torch.nn.Module,
                             class_names: List[str] = None,
                             transform=None,
                             ax=None,
-                            device = torch.device):
+                            device="cpu"
+                            ):
 
     # Load in image and convert the tensor values to float32
     target_image = torchvision.io.read_image(str(image_path)).type(torch.float32)
@@ -250,7 +250,6 @@ def pred_and_plot_image(model: torch.nn.Module,
         target_image = transform(target_image)
 
     model.to(device)
-
     # Turn on model evaluation mode and inference mode
     model.eval()
     with torch.inference_mode():
@@ -258,7 +257,6 @@ def pred_and_plot_image(model: torch.nn.Module,
         target_image = target_image.unsqueeze(dim=0)
 
         # Make a prediction on image with an extra dimension 
-        # and send it to the target device
         target_image_pred = model(target_image.to(device))
 
     # Convert logits -> prediction probabilities 
@@ -303,21 +301,21 @@ def pred_and_plot_image(model: torch.nn.Module,
 #########################################################################################
 #####                 Function to make predictions on single images                 #####
 #########################################################################################
-def pred_on_single_image(image_path:str, model_folder:str):
+def pred_on_single_image(image_path:str, model_folder:str,device):
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_B0_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
     trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
 
 
-    pred_and_plot_image(trained_model, image_path, class_names, auto_transforms)
+    pred_and_plot_image(trained_model, image_path, class_names, auto_transforms, device=device)
 
 #########################################################################################
 #####                     Function to evaluate an existing model                    #####
 #########################################################################################
-def eval_existing_model(model_folder:str,validation_folder:str, num_images:int):
+def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,device):
 
     trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
 
@@ -345,7 +343,8 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int):
                             image_path=image_path,
                             class_names=class_names,
                             transform=auto_transforms,
-                            ax = ax)
+                            ax = ax,
+                            device=device)
     if num_images%2 != 0:
         fig.delaxes(axes[math.ceil(num_images/2)-1,1])
     plt.tight_layout()
@@ -359,7 +358,7 @@ def train_step(model: torch.nn.Module,
                     dataloader: torch.utils.data.DataLoader, 
                     loss_fn: torch.nn.Module, 
                     optimizer: torch.optim.Optimizer,
-                    device:torch.device
+                    device
                 ) -> Tuple[float, float]:
 
   # Put model in train mode
@@ -401,7 +400,7 @@ def train_step(model: torch.nn.Module,
 def val_step(model: torch.nn.Module, 
               dataloader: torch.utils.data.DataLoader, 
               loss_fn: torch.nn.Module,
-              device:torch.device
+              device
               ) -> Tuple[float, float]:
 
   # Put model in eval mode
@@ -441,7 +440,7 @@ def train(model: torch.nn.Module,
             epochs: int,
             folderpath: str,
             batch_size: int,
-            device: torch.device
+            device
             ) -> Dict[str, List]:
 
     # Create empty results dictionary
@@ -457,7 +456,7 @@ def train(model: torch.nn.Module,
                                             dataloader=train_dataloader,
                                             loss_fn=loss_fn,
                                             optimizer=optimizer,
-                                            device=device
+                                            device=device                                          
                                             )
         val_loss, val_acc = val_step(model=model,
             dataloader=val_dataloader,
@@ -492,16 +491,17 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     target_dir_new_model = 'models'
     model_name = "TransferLearning"
 
-    # Setup device agnostic code
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
     dict_hyperparameters = {'seed': seed, 'learning_rate':learning_rate, 'epochs': epochs, 
                         'dropout':dropout, 'num_workers':num_workers,'batch_size': batch_size}
 
     folderpath = store_hyperparameters(target_dir_new_model,model_name=model_name,dict=dict_hyperparameters)
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info("Training on:")
+    logger.info(device)
+
     # Load pretrained model, weights and the transforms
-    model, weights = load_pretrained_model(divice=device)
+    model, weights = load_pretrained_model(device)
 
     # Load data
     train_dataloader, val_dataloader, class_names = load_data(train_dir=train_dir,
@@ -516,7 +516,8 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
                                             dropout=dropout, 
                                             class_names=class_names,
                                             seed=seed,
-                                            divice=device)
+                                            device=device
+                                            )
 
     # Define loss and optimizer
     loss_fn = nn.CrossEntropyLoss()
@@ -540,8 +541,6 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
                         batch_size=batch_size,
                         device=device
                     )
-
-
 
     # End the timer and print out how long it took
     end_time = timer()
