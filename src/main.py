@@ -1,23 +1,23 @@
 from model_engineering import train_new_TransferLearning_model
 from model_engineering import eval_existing_model
 from model_engineering import pred_on_single_image
+from model_engineering import test_model
 from loguru import logger
 
 if __name__ == "__main__":
     # Define dataset path
     dataset_path = 'data_combined/dataset_splitted'
-    model_folder = "models/model_08112022_2233"
-    validation_folder = "data_combined/dataset_splitted/val"
+    model_folder = "models/TransferLearning_model_01122022_0953"
+    validation_folder = "data_combined/dataset_splitted/test"
     single_image_path = "data_own_images/paper_Tobi.jpg"
-
 
     # Set hyperparameters
     seed = 42
     learning_rate = 0.001
-    epochs = 10
+    epochs = 20
     dropout = 0.2
     num_workers = 2
-    batch_size = 32
+    batch_size = 64
 
     # Set parameter for evaluation
     num_images_val = 6
@@ -40,11 +40,12 @@ if __name__ == "__main__":
                                                             batch_size=batch_size)
         logger.info("Congratulations, the training was successful!")
         logger.info("Start evaluating the new model...")  
-        eval_existing_model(model_folder=model_folder, validation_folder=validation_folder, num_images=num_images_val)  
+        test_model(model_folder=model_folder, validation_folder=validation_folder)  
 
     if evaluate_existing_model:
         logger.info("Start evaluating the given model..") 
-        eval_existing_model(model_folder=model_folder, validation_folder=validation_folder, num_images=num_images_val)
+        test_model(model_folder=model_folder, validation_folder=validation_folder)    
+        eval_existing_model(model_folder=model_folder, validation_folder=validation_folder, num_images=num_images_val,device='cpu')
 
     if prediction_on_single_image:
         logger.info("Start classifying the given image...") 

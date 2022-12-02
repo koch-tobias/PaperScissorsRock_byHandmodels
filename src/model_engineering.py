@@ -83,10 +83,10 @@ def create_dataloaders(train_dir: str,
 def load_pretrained_model(device):
 
     # Load best available weights from pretraining on ImageNet
-    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     
     # Load pretrained model with selected weights
-    model = torchvision.models.efficientnet_v2_l(value=weights).to(device)
+    model = torchvision.models.efficientnet_v2_m(weights).to(device)
 
     return model, weights
 
@@ -143,7 +143,7 @@ def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict
     summary_path = folderpath / ("summary.pkl")
 
     # Print a summary using torchinfo (uncomment for actual output)
-    summary = summary(model=classifier_model, 
+    model_summary = summary(model=classifier_model, 
                         input_size=(batch_size, 3, 224, 224), # make sure this is "input_size", not "input_shape"
                         col_names=["input_size", "output_size", "num_params", "trainable"],
                         col_width=20,
@@ -151,7 +151,7 @@ def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict
                         )
 
     with open(summary_path, "wb") as filestore:
-        pickle.dump(summary, filestore)   
+        pickle.dump(model_summary, filestore)   
 
     with open(model_path, "wb") as filestore:
         pickle.dump(classifier_model, filestore)
@@ -191,7 +191,7 @@ def get_model(model_folder: str):
 #########################################################################################
 #####             Function for plotting the loss curve and the accuracy             #####
 #########################################################################################
-def plot_loss_curves(results):
+def plot_loss_curves(results,model_folder):
     """Plots training curves of a results dictionary.
     Args:
         results (dict): dictionary containing list of values, e.g.
@@ -226,6 +226,7 @@ def plot_loss_curves(results):
     plt.xlabel("Epochs")
     plt.legend()
 
+    plt.savefig(model_folder)
     plt.show()
 
 #########################################################################################
@@ -304,7 +305,7 @@ def pred_and_plot_image(model: torch.nn.Module,
 def pred_on_single_image(image_path:str, model_folder:str,device):
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
     trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
@@ -319,12 +320,12 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,d
 
     trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
 
-    plot_loss_curves(model_results)
+    plot_loss_curves(model_results,model_folder)
 
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_V2_L_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
     valid_image_path_list = list(Path(validation_folder).glob("*/*.*")) # get list all image paths from val data 
@@ -350,6 +351,51 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,d
     plt.tight_layout()
     plt.show()
 
+#########################################################################################
+#####                    Functions to test model on unseen data                     #####
+#########################################################################################
+def test_model(model_folder, validation_folder):
+    trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
+    image_path_list = list(Path(validation_folder).glob("*/*.*"))
+    class_names = ['paper', 'rock', 'scissors']
+    accuracy = []
+
+    for image_path in image_path_list:
+        # Load in image and convert the tensor values to float32
+        target_image = torchvision.io.read_image(str(image_path)).type(torch.float32)
+
+        # Divide the image pixel values by 255 to get them between [0, 1]
+        target_image = target_image / 255
+
+        weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
+        auto_transforms = weights.transforms()
+
+        # Transform if necessary
+        target_image = auto_transforms(target_image)
+
+        # Turn on model evaluation mode and inference mode
+        trained_model.eval()
+        with torch.inference_mode():
+            # Add an extra dimension to the image
+            target_image = target_image.unsqueeze(dim=0)
+
+            # Make a prediction on image with an extra dimension 
+            target_image_pred = trained_model(target_image.cuda())
+
+        # Convert logits -> prediction probabilities 
+        # (using torch.softmax() for multi-class classification)
+        target_image_pred_probs = torch.softmax(target_image_pred, dim=1)
+
+        # Convert prediction probabilities -> prediction labels
+        target_image_pred_label = torch.argmax(target_image_pred_probs, dim=1)
+        pred_class = class_names[target_image_pred_label.item()]
+        true_class = image_path.parts[3]  
+        if pred_class == true_class:
+            accuracy.append(1)
+        else:
+            accuracy.append(0)
+    
+    print("Accuracy on test set: " + str(sum(accuracy)/len(accuracy)*100) + " %")
 
 #########################################################################################
 #####                Functions to train the transfer learning model                 #####
@@ -407,7 +453,7 @@ def val_step(model: torch.nn.Module,
   model.eval() 
 
   # Setup val loss and val accuracy values
-  val_loss, valcc = 0, 0
+  val_loss, val_acc = 0, 0
 
   # Turn on inference context manager
   with torch.inference_mode():
@@ -425,7 +471,7 @@ def val_step(model: torch.nn.Module,
 
           # Calculate and accumulate accuracy
           val_pred_labels = val_pred_logits.argmax(dim=1)
-          valcc += ((val_pred_labels == y).sum().item()/len(val_pred_labels))
+          val_acc += ((val_pred_labels == y).sum().item()/len(val_pred_labels))
 
   # Adjust metrics to get average loss and accuracy per batch 
   val_loss = val_loss / len(dataloader)
@@ -466,7 +512,7 @@ def train(model: torch.nn.Module,
 
         # Print out what's happening
         print(
-            f"Epoch: {epoch+1} | "
+            f"\nEpoch: {epoch+1} | "
             f"train_loss: {train_loss:.4f} | "
             f"train_acc: {train_acc:.4f} | "
             f"val_loss: {val_loss:.4f} | "
@@ -478,7 +524,6 @@ def train(model: torch.nn.Module,
         results["train_acc"].append(train_acc)
         results["val_loss"].append(val_loss)
         results["val_acc"].append(val_acc)
-
 
     model_folder = store_model(folderpath, model, results,batch_size=batch_size)
 
@@ -497,6 +542,7 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     folderpath = store_hyperparameters(target_dir_new_model,model_name=model_name,dict=dict_hyperparameters)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    #device = "cpu"
     logger.info("Training on:")
     logger.info(device)
 
@@ -547,7 +593,7 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
 
     time.sleep(10)
     print(f"[INFO] Total training time: {end_time-start_time:.3f} seconds")
-    plot_loss_curves(results)
+    plot_loss_curves(results, folderpath)
     
     return model_folder
 

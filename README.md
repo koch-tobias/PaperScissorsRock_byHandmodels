@@ -78,6 +78,7 @@ For our project we combined the following three subdataset with in total 7477 im
     <img src="data_original/dataset_3/train/paper/glu_161.png" width="150" /> 
     <img src="data_original/dataset_3/train/scissors/glu_116.png" width="150" /> 
   </p>
+- [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors)
 
 ## Data Engineering
 In this part we want to consider the research question "Which data augmentation methods can increase the model's performance in classifying images of „Rock, Paper, Scissors“ hand signs?"

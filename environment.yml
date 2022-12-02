@@ -20,6 +20,7 @@ dependencies:
   - numpy
   - kornia
   - scikit-image
+  - torchinfo
  
 
   # Pip installationen
