@@ -221,10 +221,21 @@ def add_new_dataset(dataset_path: str):
 ## Split dataset
 
 # %%
-def split(new_dataset_dir: str,seed: int):
-    src = new_dataset_dir
-    dst = 'data_combined'
-    splitfolders.ratio(src, output=dst, seed=seed, ratio=(0.8, 0.2))
+def split(original_dataset_dir: str,seed: int):
+    #Truncate the existing combined dataset folder
+    dst_dir = 'data_combined'
+    splits, num_splits = loading(dst_dir)
+    for split in splits:
+        if split == 'train' or split == 'val':
+            split_dir = dst_dir + '/' + split
+            shutil.rmtree(split_dir)
+    
+    #Split original datasets into train&validation (80/20) and store it as combined dataset
+    datasets, num_datasets = loading(original_dataset_dir)
+    for dataset in datasets:
+        src = original_dataset_dir + '/' + dataset
+        dst = 'data_combined'
+        splitfolders.ratio(src, output=dst, seed=seed, ratio=(0.8, 0.2))
 
 
 # %% [markdown]

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     model_folder = "models/TransferLearning_model_01122022_0953"
     validation_folder = "data_combined/dataset_splitted/test"
     single_image_path = "data_own_images/paper_Tobi.jpg"
-    new_dataset_dir = 'data_original/dataset_2'
+    original_dataset_dir = 'data_original'
 
     # Set hyperparameters
     seed = 42
@@ -55,6 +55,6 @@ if __name__ == "__main__":
         pred_on_single_image(image_path=single_image_path, model_folder=model_folder)
 
     if add_new_dataset_to_combined_dataset:
-        split(new_dataset_dir=new_dataset_dir,seed=seed) #DEFAULT SEED=42
+        split(original_dataset_dir=original_dataset_dir,seed=seed) #DEFAULT SEED=42
 
 
