@@ -1,3 +1,4 @@
+from data_engineering import split
 from model_engineering import train_new_TransferLearning_model
 from model_engineering import eval_existing_model
 from model_engineering import pred_on_single_image
@@ -10,6 +11,7 @@ if __name__ == "__main__":
     model_folder = "models/TransferLearning_model_01122022_0953"
     validation_folder = "data_combined/dataset_splitted/test"
     single_image_path = "data_own_images/paper_Tobi.jpg"
+    new_dataset_dir = "data_original/dataset_1"
 
     # Set hyperparameters
     seed = 42
@@ -24,10 +26,11 @@ if __name__ == "__main__":
 
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = True
+    train_new_transferlearning_model = False
     train_new_baseline_model = False
     evaluate_existing_model = False
     prediction_on_single_image = False
+    add_new_dataset_to_combined_dataset = True
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning... (This takes about 30 minutes per epoch)")
@@ -50,5 +53,8 @@ if __name__ == "__main__":
     if prediction_on_single_image:
         logger.info("Start classifying the given image...") 
         pred_on_single_image(image_path=single_image_path, model_folder=model_folder)
+
+    if add_new_dataset_to_combined_dataset:
+        split(new_dataset_dir==new_dataset_dir,seed=seed) #DEFAULT SEED=42
 
 

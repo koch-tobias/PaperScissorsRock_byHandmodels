@@ -184,7 +184,7 @@ def analyze_eval_dataset(dataset_dir):
 def add_new_dataset(dataset_path: str):
     split = ['test','train','val']
     labels = ['rock','paper','scissors']
-    target_path = '../data_combined/dataset_witout_split/'
+    target_path = '../data_combined'
      
     subfolders, num_subfolders = loading(dataset_path)
     dir_depth = count_subfolder(folder_path=dataset_path)
@@ -213,16 +213,18 @@ def add_new_dataset(dataset_path: str):
                         src = path_labels + "/" + img
                         shutil.copy(src, dst)
 
+    rgba_to_rgb()
+
     print("Dataset successfully added!")
 
 # %% [markdown]
 ## Split dataset
 
 # %%
-def split():
-    src = '../data_combined/dataset_without_split'
-    dst = '../data_combined/dataset_splitted'
-    splitfolders.ratio(src, output=dst, seed=1337, ratio=(.7, 0.1,0.2))
+def split(new_dataset_dir: str,seed: int=42):
+    src = new_dataset_dir
+    dst = '../data_combined'
+    splitfolders.ratio(src, output=dst, seed=seed, ratio=(.8, 0.2))
 
 
 # %% [markdown]
@@ -240,7 +242,7 @@ def transform_img(img_path: str):
 # ## Function to transform images from RGBA to RGB
 
 # %%
-def rgba_to_rgb(dir_dataset="data_combined/dataset_splitted"):
+def rgba_to_rgb(dir_dataset="data_combined"):
     #Convert all rgba images as rbg images and replace it in the dataset
     split = ['test','train','val']
     labels = ['rock','paper','scissors']
