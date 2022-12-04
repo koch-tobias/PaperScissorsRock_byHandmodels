@@ -237,6 +237,8 @@ def split(original_dataset_dir: str,seed: int):
         dst = 'data_combined'
         splitfolders.ratio(src, output=dst, seed=seed, ratio=(0.8, 0.2))
 
+    rgba_to_rgb()
+
 
 # %% [markdown]
 # ## Function to transform images to same size

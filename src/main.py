@@ -7,10 +7,10 @@ from loguru import logger
 
 if __name__ == "__main__":
     # Define dataset path
-    dataset_path = 'data_combined/dataset_splitted'
-    model_folder = "models/TransferLearning_model_01122022_0953"
-    validation_folder = "data_combined/dataset_splitted/test"
-    single_image_path = "data_own_images/paper_Tobi.jpg"
+    dataset_path = 'data_combined'
+    model_folder = "models/TransferLearning_model_04122022_1628"
+    test_folder = "data_combined/test"
+    single_image_path = ""
     original_dataset_dir = 'data_original'
 
     # Set hyperparameters
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     # Set if you want to train a new model or evualate an existing model
     train_new_transferlearning_model = False
     train_new_baseline_model = False
-    evaluate_existing_model = False
+    evaluate_existing_model = True
     prediction_on_single_image = False
-    add_new_dataset_to_combined_dataset = True
+    add_new_dataset_to_combined_dataset = False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning... (This takes about 30 minutes per epoch)")
@@ -43,12 +43,12 @@ if __name__ == "__main__":
                                                             batch_size=batch_size)
         logger.info("Congratulations, the training was successful!")
         logger.info("Start evaluating the new model...")  
-        test_model(model_folder=model_folder, validation_folder=validation_folder)  
+        test_model(model_folder=model_folder, test_folder=test_folder)  
 
     if evaluate_existing_model:
         logger.info("Start evaluating the given model..") 
-        test_model(model_folder=model_folder, validation_folder=validation_folder)    
-        eval_existing_model(model_folder=model_folder, validation_folder=validation_folder, num_images=num_images_val,device='cpu')
+        test_model(model_folder=model_folder, test_folder=test_folder)    
+        #eval_existing_model(model_folder=model_folder, validation_folder=test_folder, num_images=num_images_val,device='cpu')
 
     if prediction_on_single_image:
         logger.info("Start classifying the given image...") 

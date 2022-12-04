@@ -191,7 +191,7 @@ def get_model(model_folder: str):
 #########################################################################################
 #####             Function for plotting the loss curve and the accuracy             #####
 #########################################################################################
-def plot_loss_curves(results,model_folder):
+def plot_loss_curves(results,model_folder,safe_fig=False):
     """Plots training curves of a results dictionary.
     Args:
         results (dict): dictionary containing list of values, e.g.
@@ -226,7 +226,8 @@ def plot_loss_curves(results,model_folder):
     plt.xlabel("Epochs")
     plt.legend()
 
-    plt.savefig(model_folder)
+    if safe_fig:
+        plt.savefig(model_folder)
     plt.show()
 
 #########################################################################################
@@ -354,9 +355,9 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,d
 #########################################################################################
 #####                    Functions to test model on unseen data                     #####
 #########################################################################################
-def test_model(model_folder, validation_folder):
+def test_model(model_folder, test_folder):
     trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
-    image_path_list = list(Path(validation_folder).glob("*/*.*"))
+    image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
     accuracy = []
 
@@ -389,7 +390,7 @@ def test_model(model_folder, validation_folder):
         # Convert prediction probabilities -> prediction labels
         target_image_pred_label = torch.argmax(target_image_pred_probs, dim=1)
         pred_class = class_names[target_image_pred_label.item()]
-        true_class = image_path.parts[3]  
+        true_class = image_path.parts[2]  
         if pred_class == true_class:
             accuracy.append(1)
         else:
@@ -593,7 +594,6 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
 
     time.sleep(10)
     print(f"[INFO] Total training time: {end_time-start_time:.3f} seconds")
-    plot_loss_curves(results, folderpath)
+    plot_loss_curves(results, model_folder,safe_fig=True)
     
     return model_folder
-
