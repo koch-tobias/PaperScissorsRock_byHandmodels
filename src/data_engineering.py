@@ -221,10 +221,10 @@ def add_new_dataset(dataset_path: str):
 ## Split dataset
 
 # %%
-def split(new_dataset_dir: str,seed: int=42):
+def split(new_dataset_dir: str,seed: int):
     src = new_dataset_dir
-    dst = '../data_combined'
-    splitfolders.ratio(src, output=dst, seed=seed, ratio=(.8, 0.2))
+    dst = 'data_combined'
+    splitfolders.ratio(src, output=dst, seed=seed, ratio=(0.8, 0.2))
 
 
 # %% [markdown]
@@ -444,25 +444,6 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
 
 # %% [markdown]
 # ## Main-method
-
-# %%
-# Add new dataset to the combined dataset
-add_dataset = False
-dir_new_dataset = '../data_original/dataset_X'
-
-if add_dataset == True:
-    add_new_dataset(dataset_path=dir_new_dataset)
-else:
-    print("Datasets are already combined!")
-
-# %%
-# Split data into train, validation and testset
-split_dataset = False
-
-if split_dataset == True:
-    split()
-else:
-    print("Datasets is already splitted!")
 
 # %%
 # Analyzing the original datasets
