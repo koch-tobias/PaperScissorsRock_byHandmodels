@@ -544,7 +544,7 @@ def train(target_dir_new_model: str,
 
     # Start the timer
     start_time = timer()
-
+    early_stopping = 0
     # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
         train_loss, train_acc = train_step(model=model,
@@ -573,6 +573,18 @@ def train(target_dir_new_model: str,
         results["train_acc"].append(train_acc)
         results["val_loss"].append(val_loss)
         results["val_acc"].append(val_acc)
+
+        # Early Stopping
+        if len(results["val_acc"]) > cfg_hp["patience"]:
+            for i in range(cfg_hp["patience"]):
+                i = 2 + i
+                if results["val_acc"][-1] < results["val_acc"][-i]:
+                    early_stopping = early_stopping + 1
+
+        if early_stopping == cfg_hp["patience"]:
+            break
+        else:
+            continue
 
     # End the timer and print out how long it took
     end_time = timer()
