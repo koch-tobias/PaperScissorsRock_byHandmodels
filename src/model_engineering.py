@@ -25,6 +25,7 @@ import random
 import time
 import math
 from data_engineering import split
+from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
@@ -81,20 +82,27 @@ def create_dataloaders(train_dir: str,
 #########################################################################################
 #####                      Function to load pretrainend model                       #####
 #########################################################################################
-def load_pretrained_model(device):
+def load_pretrained_model(device, tf_model:bool):
 
     # Load best available weights from pretraining on ImageNet
     weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     
     # Load pretrained model with selected weights
-    model = torchvision.models.efficientnet_v2_m(weights).to(device)
+    if tf_model:
+        model = torchvision.models.efficientnet_v2_m(weights)
+    else:
+        model = torchvision.models.efficientnet_v2_m()
+
+    if torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+    model.to(device)
 
     return model, weights
 
 #########################################################################################
 #####         Function to recreate the classifier layer of the model                #####
 #########################################################################################
-def recreate_classifier_layer(model: torch.nn.Module, dropout: int, class_names: list, seed: int, device):
+def recreate_classifier_layer(model: torch.nn.Module, tf_model:bool, dropout: int, class_names: list, seed: int, device):
     # Freeze all base layers in the "features" section of the model 
     # by setting requires_grad=False
     for param in model.features.parameters():
@@ -137,7 +145,7 @@ def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
 #########################################################################################
 #####                     Function to save the trained model                        #####
 #########################################################################################
-def store_model(target_dir_new_model: str, model_name: str, hyperparameter_dict: dict, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
+def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyperparameter_dict: dict, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
     logger.info("Store model, results and hyperparameters...")
     
     folderpath = store_hyperparameters(target_dir_new_model,model_name, hyperparameter_dict)
@@ -150,7 +158,8 @@ def store_model(target_dir_new_model: str, model_name: str, hyperparameter_dict:
                         input_size=(batch_size, 3, 224, 224), # make sure this is "input_size", not "input_shape"
                         col_names=["input_size", "output_size", "num_params", "trainable"],
                         col_width=20,
-                        row_settings=["var_names"]
+                        row_settings=["var_names"],
+                        verbose=0
                         )
 
     with open(summary_path, "wb") as filestore:
@@ -162,9 +171,9 @@ def store_model(target_dir_new_model: str, model_name: str, hyperparameter_dict:
     with open(results_path, "wb") as filestore:
         pickle.dump(results, filestore)
 
-    df = pd.DataFrame(index=False)
-    df["model_name"] = [model_name]
-    df["pretrained"] = ["yes"]
+    df = pd.DataFrame()
+    df["model_name"] = [folderpath]
+    df["pretrained"] = tf_model
     df["epochs"] = [hyperparameter_dict["epochs"]]
     df["seed"] = [hyperparameter_dict["seed"]]
     df["learning_rate"] = [hyperparameter_dict["learning_rate"]]
@@ -178,10 +187,10 @@ def store_model(target_dir_new_model: str, model_name: str, hyperparameter_dict:
     df["val_acc"] = [list(results["val_acc"])[-1]]
     try:
         df_exist = pd.read_csv('models/models_results.csv')
-        df_new = pd.concat([df_exist, df], axis=0, ignore_index=True)
-        df_new.to_csv('models/models_results.csv')
+        df_new = pd.concat([df_exist, df],ignore_index=True)
+        df_new.to_csv('models/models_results.csv',index=False)
     except:
-        df.to_csv('models/models_results.csv')
+        df.to_csv('models/models_results.csv',index=False)
 
     
     logger.info("Model stored!")
@@ -197,9 +206,13 @@ def get_model(model_folder: str):
     model_path = model_folder / onlyfiles[1]
     results_path = model_folder / onlyfiles[2]
     hyperparameters_path = model_folder / onlyfiles[0]
+    summary_path = model_folder / onlyfiles[3]
 
     with open(model_path, "rb") as fid:
         classifier_model = pickle.load(fid)
+
+    with open(summary_path, "rb") as fid:
+        summary = pickle.load(fid)
 
     with open(results_path, "rb") as fid:
         results = pickle.load(fid)
@@ -208,15 +221,17 @@ def get_model(model_folder: str):
         dict = pickle.load(fid)
 
     logger.info("Model and hyperparameters loaded!")
-    logger.info("The model is trained with the following hyperparameters:") 
+    logger.info("The model is trained with the following hyperparameters:\n") 
     logger.info(dict)
+    logger.info("Summary of the model architecture:\n")
+    logger.info(summary)
 
-    return classifier_model, results, dict
+    return classifier_model, results, dict, summary
 
 #########################################################################################
 #####             Function for plotting the loss curve and the accuracy             #####
 #########################################################################################
-def plot_loss_curves(results,model_folder,safe_fig=False):
+def plot_loss_acc_curves(model_folder:str):
     """Plots training curves of a results dictionary.
     Args:
         results (dict): dictionary containing list of values, e.g.
@@ -225,13 +240,14 @@ def plot_loss_curves(results,model_folder,safe_fig=False):
              "val_loss": [...],
              "val_acc": [...]}
     """
-    loss = results["train_loss"]
-    val_loss = results["val_loss"]
+    trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
+    loss = model_results["train_loss"]
+    val_loss = model_results["val_loss"]
 
-    accuracy = results["train_acc"]
-    val_accuracy = results["val_acc"]
+    accuracy = model_results["train_acc"]
+    val_accuracy = model_results["val_acc"]
 
-    epochs = range(len(results["train_loss"]))
+    epochs = range(len(model_results["train_loss"]))
 
     plt.figure(figsize=(15, 7))
 
@@ -251,8 +267,7 @@ def plot_loss_curves(results,model_folder,safe_fig=False):
     plt.xlabel("Epochs")
     plt.legend()
 
-    if safe_fig:
-        plt.savefig(model_folder + "/" + "train_loss_acc.png")
+    plt.savefig(model_folder + "/" + "train_loss_acc.png")
     plt.show()
 
 #########################################################################################
@@ -334,19 +349,20 @@ def pred_on_single_image(image_path:str, model_folder:str,device):
     weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
-    trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
+    trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
 
 
     pred_and_plot_image(trained_model, image_path, class_names, auto_transforms, device=device)
 
+
 #########################################################################################
 #####                     Function to evaluate an existing model                    #####
 #########################################################################################
-def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,device):
+def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
 
-    trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    plot_loss_curves(model_results,model_folder)
+    trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
 
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
@@ -354,7 +370,7 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,d
     weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
-    valid_image_path_list = list(Path(validation_folder).glob("*/*.*")) # get list all image paths from val data 
+    valid_image_path_list = list(Path(image_folder).glob("*/*.*")) # get list all image paths from val data 
     valid_image_path_sample = random.sample(population=valid_image_path_list, # go through all of the val image paths
                                         k=num_images) # randomly select 'k' image paths to pred and plot
 
@@ -376,12 +392,13 @@ def eval_existing_model(model_folder:str,validation_folder:str, num_images:int,d
         fig.delaxes(axes[math.ceil(num_images/2)-1,1])
     plt.tight_layout()
     plt.show()
+    plt.savefig(model_folder)
 
 #########################################################################################
 #####                    Functions to test model on unseen data                     #####
 #########################################################################################
 def test_model(model_folder, test_folder):
-    trained_model, model_results, dict_hyperparameters = get_model(Path(model_folder))
+    trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
     accuracy = []
@@ -505,15 +522,16 @@ def val_step(model: torch.nn.Module,
   return val_loss, val_acc
 
 def train(target_dir_new_model: str,
+            tf_model:bool,
             model_name: str,
-            hyperparameter_dict: dict,
             model: torch.nn.Module, 
             train_dataloader: torch.utils.data.DataLoader, 
             val_dataloader: torch.utils.data.DataLoader, 
             optimizer: torch.optim.Optimizer,
             loss_fn: torch.nn.Module,
-            epochs: int,
             batch_size: int,
+            epochs: int,
+            hyperparameter_dict: dict,
             device
             ) -> Dict[str, List]:
 
@@ -563,68 +581,80 @@ def train(target_dir_new_model: str,
     total_train_time = end_time-start_time
     print(f"[INFO] Total training time: {total_train_time:.3f} seconds")
 
-    model_folder = store_model(target_dir_new_model, model_name, hyperparameter_dict, model, results,batch_size, total_train_time)
+    model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, model, results,batch_size, total_train_time)
 
     # Return the filled results at the end of the epochs
     return results, model_folder
 
-def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:float, epochs:int, dropout:float, num_workers:int, batch_size:int):
+def train_new_TransferLearning_model(dataset_path:str, tf_model:bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
-    model_name = "TransferLearning"
-
-    dict_hyperparameters = {'seed': seed, 'learning_rate':learning_rate, 'epochs': epochs, 
-                        'dropout':dropout, 'num_workers':num_workers,'batch_size': batch_size}
-
-    split(original_dataset_dir='data_original', seed=seed)
+    if tf_model:
+        model_name = "TransferLearning"
+    else:
+        model_name = "Baseline"
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logger.info("Training on:")
     logger.info(device)
 
-    # Load pretrained model, weights and the transforms
-    model, weights = load_pretrained_model(device)
+    
+    for s in range(len(cfg_hp["seed"])):
+        split_dataset=True
+        for b in range(len(cfg_hp["batch_size"])):
+            for l in range(len(cfg_hp["lr"])):
+                for d in range(len(cfg_hp["dropout"])):
+                    if split_dataset:
+                        split(original_dataset_dir='data_original', seed=cfg_hp["seed"][s])
+                        split_dataset = False
 
-    # Load data
-    train_dataloader, val_dataloader, class_names = load_data(train_dir=train_dir,
-                                                                    val_dir=val_dir, 
-                                                                    weights=weights, 
-                                                                    num_workers=num_workers, 
-                                                                    batch_size=batch_size
-                                                                    )
+                    # Load pretrained model, weights and the transforms
+                    model, weights = load_pretrained_model(device, tf_model=tf_model)
 
-    # Recreate classifier layer
-    model = recreate_classifier_layer(model=model, 
-                                            dropout=dropout, 
-                                            class_names=class_names,
-                                            seed=seed,
-                                            device=device
-                                            )
+                    # Load data
+                    train_dataloader, val_dataloader, class_names = load_data(train_dir=train_dir,
+                                                                                    val_dir=val_dir, 
+                                                                                    weights=weights, 
+                                                                                    num_workers=cfg_hp["num_workers"], 
+                                                                                    batch_size=cfg_hp["batch_size"][b]
+                                                                                    )
 
-    # Define loss and optimizer
-    loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+                    # Recreate classifier layer
+                    model = recreate_classifier_layer(model=model, 
+                                                            tf_model=tf_model,
+                                                            dropout=cfg_hp["dropout"][d], 
+                                                            class_names=class_names,
+                                                            seed=cfg_hp["seed"][s],
+                                                            device=device
+                                                            )
 
-    # Set the random seeds
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+                    # Define loss and optimizer
+                    loss_fn = nn.CrossEntropyLoss()
+                    optimizer = torch.optim.Adam(model.parameters(), lr=cfg_hp["lr"][l])
 
+                    # Set the random seeds
+                    torch.manual_seed(cfg_hp["seed"][s])
+                    torch.cuda.manual_seed(cfg_hp["seed"][s])
 
-    # Setup training and save the results
-    results, model_folder = train(target_dir_new_model=target_dir_new_model,
-                        model_name=model_name,
-                        hyperparameter_dict=dict_hyperparameters, 
-                        model=model,
-                        train_dataloader=train_dataloader,
-                        val_dataloader=val_dataloader,
-                        optimizer=optimizer,
-                        loss_fn=loss_fn,
-                        epochs=epochs,
-                        batch_size=batch_size,
-                        device=device
-                    )
+                    
+                    hyperparameter_dict = {"epochs": cfg_hp["epochs"], "seed": cfg_hp["seed"][s], "learning_rate": cfg_hp["lr"][l], "dropout": cfg_hp["dropout"][d], "batch_size": cfg_hp["batch_size"][b], "num_workers": cfg_hp["num_workers"]}
 
-    plot_loss_curves(results, model_folder,safe_fig=True)
+                    # Setup training and save the results
+                    results, model_folder = train(target_dir_new_model=target_dir_new_model,
+                                        tf_model=tf_model,
+                                        model_name=model_name,
+                                        model=model,
+                                        train_dataloader=train_dataloader,
+                                        val_dataloader=val_dataloader,
+                                        optimizer=optimizer,
+                                        loss_fn=loss_fn,
+                                        batch_size=cfg_hp["batch_size"][b],
+                                        epochs=cfg_hp["epochs"],
+                                        hyperparameter_dict=hyperparameter_dict,
+                                        device=device
+                                    )
+
+    #plot_loss_acc_curves(results, model_folder,safe_fig=True)
     
     return model_folder
