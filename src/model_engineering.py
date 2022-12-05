@@ -9,6 +9,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from torchinfo import summary
 from tqdm.auto import tqdm
+import pandas as pd
 from typing import Dict, List, Tuple
 from timeit import default_timer as timer 
 from pathlib import Path
@@ -23,7 +24,7 @@ from PIL import Image
 import random
 import time
 import math
-
+from data_engineering import split
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
@@ -136,8 +137,10 @@ def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
 #########################################################################################
 #####                     Function to save the trained model                        #####
 #########################################################################################
-def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict,batch_size:int):
-    logger.info("Store model...")
+def store_model(target_dir_new_model: str, model_name: str, hyperparameter_dict: dict, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
+    logger.info("Store model, results and hyperparameters...")
+    
+    folderpath = store_hyperparameters(target_dir_new_model,model_name, hyperparameter_dict)
     model_path = folderpath / ("model.pkl")
     results_path = folderpath / ("results.pkl")
     summary_path = folderpath / ("summary.pkl")
@@ -159,6 +162,28 @@ def store_model(folderpath: Path, classifier_model:torch.nn.Module, results:dict
     with open(results_path, "wb") as filestore:
         pickle.dump(results, filestore)
 
+    df = pd.DataFrame(index=False)
+    df["model_name"] = [model_name]
+    df["pretrained"] = ["yes"]
+    df["epochs"] = [hyperparameter_dict["epochs"]]
+    df["seed"] = [hyperparameter_dict["seed"]]
+    df["learning_rate"] = [hyperparameter_dict["learning_rate"]]
+    df["dropout"] = [hyperparameter_dict["dropout"]]
+    df["batch_size"] = [hyperparameter_dict["batch_size"]]
+    df["num_workers"] = [hyperparameter_dict["num_workers"]]
+    df["total_train_time"] = [total_train_time/60]
+    df["train_loss"] = [list(results["train_loss"])[-1]]
+    df["train_acc"] = [list(results["train_acc"])[-1]]
+    df["val_loss"] = [list(results["val_loss"])[-1]]
+    df["val_acc"] = [list(results["val_acc"])[-1]]
+    try:
+        df_exist = pd.read_csv('models/models_results.csv')
+        df_new = pd.concat([df_exist, df], axis=0, ignore_index=True)
+        df_new.to_csv('models/models_results.csv')
+    except:
+        df.to_csv('models/models_results.csv')
+
+    
     logger.info("Model stored!")
 
     return folderpath
@@ -227,7 +252,7 @@ def plot_loss_curves(results,model_folder,safe_fig=False):
     plt.legend()
 
     if safe_fig:
-        plt.savefig(model_folder)
+        plt.savefig(model_folder + "/" + "train_loss_acc.png")
     plt.show()
 
 #########################################################################################
@@ -479,13 +504,15 @@ def val_step(model: torch.nn.Module,
   val_acc = val_acc / len(dataloader)
   return val_loss, val_acc
 
-def train(model: torch.nn.Module, 
+def train(target_dir_new_model: str,
+            model_name: str,
+            hyperparameter_dict: dict,
+            model: torch.nn.Module, 
             train_dataloader: torch.utils.data.DataLoader, 
             val_dataloader: torch.utils.data.DataLoader, 
             optimizer: torch.optim.Optimizer,
             loss_fn: torch.nn.Module,
             epochs: int,
-            folderpath: str,
             batch_size: int,
             device
             ) -> Dict[str, List]:
@@ -496,6 +523,9 @@ def train(model: torch.nn.Module,
                 "val_loss": [],
                 "val_acc": []
             }
+
+    # Start the timer
+    start_time = timer()
 
     # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
@@ -526,7 +556,14 @@ def train(model: torch.nn.Module,
         results["val_loss"].append(val_loss)
         results["val_acc"].append(val_acc)
 
-    model_folder = store_model(folderpath, model, results,batch_size=batch_size)
+    # End the timer and print out how long it took
+    end_time = timer()
+
+    time.sleep(10)
+    total_train_time = end_time-start_time
+    print(f"[INFO] Total training time: {total_train_time:.3f} seconds")
+
+    model_folder = store_model(target_dir_new_model, model_name, hyperparameter_dict, model, results,batch_size, total_train_time)
 
     # Return the filled results at the end of the epochs
     return results, model_folder
@@ -540,10 +577,9 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     dict_hyperparameters = {'seed': seed, 'learning_rate':learning_rate, 'epochs': epochs, 
                         'dropout':dropout, 'num_workers':num_workers,'batch_size': batch_size}
 
-    folderpath = store_hyperparameters(target_dir_new_model,model_name=model_name,dict=dict_hyperparameters)
+    split(original_dataset_dir='data_original', seed=seed)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    #device = "cpu"
     logger.info("Training on:")
     logger.info(device)
 
@@ -574,26 +610,21 @@ def train_new_TransferLearning_model(dataset_path:str, seed:int, learning_rate:f
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
-    # Start the timer
-    start_time = timer()
 
     # Setup training and save the results
-    results, model_folder = train(model=model,
+    results, model_folder = train(target_dir_new_model=target_dir_new_model,
+                        model_name=model_name,
+                        hyperparameter_dict=dict_hyperparameters, 
+                        model=model,
                         train_dataloader=train_dataloader,
                         val_dataloader=val_dataloader,
                         optimizer=optimizer,
                         loss_fn=loss_fn,
                         epochs=epochs,
-                        folderpath=folderpath,
                         batch_size=batch_size,
                         device=device
                     )
 
-    # End the timer and print out how long it took
-    end_time = timer()
-
-    time.sleep(10)
-    print(f"[INFO] Total training time: {end_time-start_time:.3f} seconds")
     plot_loss_curves(results, model_folder,safe_fig=True)
     
     return model_folder

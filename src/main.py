@@ -1,4 +1,3 @@
-from data_engineering import split
 from model_engineering import train_new_TransferLearning_model
 from model_engineering import eval_existing_model
 from model_engineering import pred_on_single_image
@@ -16,7 +15,7 @@ if __name__ == "__main__":
     # Set hyperparameters
     seed = 42
     learning_rate = 0.001
-    epochs = 20
+    epochs = 1
     dropout = 0.2
     num_workers = 2
     batch_size = 64
@@ -26,9 +25,9 @@ if __name__ == "__main__":
 
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = False
+    train_new_transferlearning_model = True
     train_new_baseline_model = False
-    evaluate_existing_model = True
+    evaluate_existing_model = False
     prediction_on_single_image = False
     add_new_dataset_to_combined_dataset = False
 
