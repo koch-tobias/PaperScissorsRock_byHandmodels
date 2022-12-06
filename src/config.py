@@ -1,9 +1,9 @@
 config_hyperparameter = {
-    "seed": [42, 1234],
+    "seed": [1234],
     "dropout": [0.1, 0.2],
     "lr": [0.001, 0.01],
-    "batch_size": [16, 64],
+    "batch_size": [2],
     "patience": 3,
-    "epochs": 2,
+    "epochs": 20,
     "num_workers": 4
 }

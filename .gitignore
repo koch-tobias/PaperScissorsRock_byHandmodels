@@ -1,4 +1,5 @@
-src/__pycache__
-data_combined
+src/__pycache__/
 .idea
 simple_dataset
+models
+src/config.py

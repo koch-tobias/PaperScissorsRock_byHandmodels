@@ -85,13 +85,13 @@ def create_dataloaders(train_dir: str,
 def load_pretrained_model(device, tf_model:bool):
 
     # Load best available weights from pretraining on ImageNet
-    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
     
     # Load pretrained model with selected weights
     if tf_model:
-        model = torchvision.models.efficientnet_v2_m(weights)
+        model = torchvision.models.efficientnet_v2_s(weights)
     else:
-        model = torchvision.models.efficientnet_v2_m()
+        model = torchvision.models.efficientnet_v2_s()
 
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
@@ -105,8 +105,9 @@ def load_pretrained_model(device, tf_model:bool):
 def recreate_classifier_layer(model: torch.nn.Module, tf_model:bool, dropout: int, class_names: list, seed: int, device):
     # Freeze all base layers in the "features" section of the model 
     # by setting requires_grad=False
-    for param in model.features.parameters():
-        param.requires_grad = False
+    if tf_model:
+        for param in model.features.parameters():
+            param.requires_grad = False
 
     # Set the manual seeds
     torch.manual_seed(seed)
@@ -346,7 +347,7 @@ def pred_and_plot_image(model: torch.nn.Module,
 def pred_on_single_image(image_path:str, model_folder:str,device):
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
@@ -367,7 +368,7 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
+    weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
     auto_transforms = weights.transforms()
 
     valid_image_path_list = list(Path(image_folder).glob("*/*.*")) # get list all image paths from val data 
@@ -410,7 +411,7 @@ def test_model(model_folder, test_folder):
         # Divide the image pixel values by 255 to get them between [0, 1]
         target_image = target_image / 255
 
-        weights = torchvision.models.EfficientNet_V2_M_Weights.DEFAULT
+        weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
         auto_transforms = weights.transforms()
 
         # Transform if necessary
