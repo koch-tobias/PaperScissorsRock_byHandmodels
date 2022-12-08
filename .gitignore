@@ -3,3 +3,4 @@ src/__pycache__/
 simple_dataset
 models
 src/config.py
+data_combined/

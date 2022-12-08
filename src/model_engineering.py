@@ -146,7 +146,7 @@ def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
 #########################################################################################
 #####                     Function to save the trained model                        #####
 #########################################################################################
-def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyperparameter_dict: dict, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
+def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyperparameter_dict: dict, trained_epochs:int, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
     logger.info("Store model, results and hyperparameters...")
     
     folderpath = store_hyperparameters(target_dir_new_model,model_name, hyperparameter_dict)
@@ -173,8 +173,9 @@ def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyper
         pickle.dump(results, filestore)
 
     df = pd.DataFrame()
-    df["model_name"] = [folderpath]
-    df["pretrained"] = tf_model
+    df["model_type"] = [model_name]
+    df["model_path"] = [folderpath]
+    df["pretrained"] = [tf_model]
     df["epochs"] = [hyperparameter_dict["epochs"]]
     df["seed"] = [hyperparameter_dict["seed"]]
     df["learning_rate"] = [hyperparameter_dict["learning_rate"]]
@@ -182,6 +183,7 @@ def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyper
     df["batch_size"] = [hyperparameter_dict["batch_size"]]
     df["num_workers"] = [hyperparameter_dict["num_workers"]]
     df["total_train_time"] = [total_train_time/60]
+    df["trained_epochs"] = [trained_epochs]
     df["train_loss"] = [list(results["train_loss"])[-1]]
     df["train_acc"] = [list(results["train_acc"])[-1]]
     df["val_loss"] = [list(results["val_loss"])[-1]]
@@ -545,9 +547,14 @@ def train(target_dir_new_model: str,
 
     # Start the timer
     start_time = timer()
+
+    #Auxilary variables
     early_stopping = 0
+    max_acc = 0
+    trained_epochs = 0
     # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
+        trained_epochs = epoch+1
         train_loss, train_acc = train_step(model=model,
                                             dataloader=train_dataloader,
                                             loss_fn=loss_fn,
@@ -576,12 +583,12 @@ def train(target_dir_new_model: str,
         results["val_acc"].append(val_acc)
 
         # Early Stopping
-        if len(results["val_acc"]) > cfg_hp["patience"]:
-            for i in range(cfg_hp["patience"]):
-                i = 2 + i
-                if results["val_acc"][-1] < results["val_acc"][-i]:
-                    early_stopping = early_stopping + 1
-
+        max_acc = max(results["val_acc"])
+        if results["val_acc"][-1] < max_acc:
+            early_stopping = early_stopping + 1
+        else:
+            early_stopping = 0
+        
         if early_stopping == cfg_hp["patience"]:
             break
         else:
@@ -594,7 +601,7 @@ def train(target_dir_new_model: str,
     total_train_time = end_time-start_time
     print(f"[INFO] Total training time: {total_train_time:.3f} seconds")
 
-    model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, model, results,batch_size, total_train_time)
+    model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, trained_epochs, model, results,batch_size, total_train_time)
 
     # Return the filled results at the end of the epochs
     return results, model_folder

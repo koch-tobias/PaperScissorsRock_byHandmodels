@@ -16,8 +16,8 @@ if __name__ == "__main__":
     num_images = 6
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = False
-    train_new_baseline_model = True
+    train_new_transferlearning_model = True
+    train_new_baseline_model = False
     test_existing_model = False
     prediction_on_single_image = False
     prediction_on_images = False
