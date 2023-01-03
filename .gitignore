@@ -4,3 +4,9 @@ simple_dataset
 models
 src/config.py
 data_combined/
+data_original/.DS_Store
+data_original/dataset_1/.DS_Store
+data_original/dataset_2/.DS_Store
+data_original/dataset_3/.DS_Store
+data_original/dataset_4/.DS_Store
+.DS_Store
