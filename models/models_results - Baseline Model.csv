@@ -1,0 +1,2 @@
+model_type,model_path,pretrained,epochs,seed,learning_rate,dropout,batch_size,num_workers,total_train_time,trained_epochs,train_loss,train_acc,val_loss,val_acc
+Baseline,models\Baseline_model_01012023_0333,False,100,42,0.001,0.1,2,4,946.5805936966666,51,0.1155703508531883,0.9578680203045684,0.3071561461197644,0.9016007532956686

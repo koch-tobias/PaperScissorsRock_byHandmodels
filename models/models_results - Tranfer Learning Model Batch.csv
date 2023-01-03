@@ -1,0 +1,2 @@
+model_type,model_path,pretrained,epochs,seed,learning_rate,dropout,batch_size,num_workers,total_train_time,trained_epochs,train_loss,train_acc,val_loss,val_acc
+TransferLearning,models\TransferLearning_model_31122022_1249,True,30,42,0.001,0.1,64,4,77.09877407333333,23,0.010227466960009958,0.9968497983870968,0.07064163830578121,0.9885110294117647
