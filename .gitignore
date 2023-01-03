@@ -3,7 +3,6 @@ src/__pycache__/
 simple_dataset
 models
 src/config.py
-data_combined/
 data_original/.DS_Store
 data_original/dataset_1/.DS_Store
 data_original/dataset_2/.DS_Store
