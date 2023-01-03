@@ -7,6 +7,8 @@ import torchvision
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import numpy as np
 from torchinfo import summary
 from tqdm.auto import tqdm
 import pandas as pd
@@ -26,20 +28,26 @@ import time
 import math
 from data_engineering import split
 from config import config_hyperparameter as cfg_hp
+
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
 def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int):
 
     # Get the transforms used to create our pretrained weights
-    auto_transforms = weights.transforms()
-    logger.info("Get the data transforms that were used to train the model on ImageNet:")
-    logger.info(auto_transforms)
+    #auto_transforms = weights.transforms()
+    manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    #logger.info("Get the data transforms that were used to train the model on ImageNet:")
+    #logger.info(auto_transforms)
 
     # Create training and valing DataLoaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
                                                                                 val_dir=val_dir,
-                                                                                transform=auto_transforms, # perform same data transforms on our own data as the pretrained model
+                                                                                transform=manual_transforms, # perform same data transforms on our own data as the pretrained model
                                                                                 batch_size=batch_size, # set mini-batch size to 32
                                                                                 num_workers=num_workers) 
 
@@ -59,7 +67,7 @@ def create_dataloaders(train_dir: str,
     # Use ImageFolder to create dataset(s)
     train_data = datasets.ImageFolder(train_dir, transform=transform)
     val_data = datasets.ImageFolder(val_dir, transform=transform)
-   
+
     # Get class names
     class_names = train_data.classes
 
@@ -70,6 +78,7 @@ def create_dataloaders(train_dir: str,
                                     num_workers=num_workers,
                                     pin_memory=True
                                 )
+                             
     val_dataloader = DataLoader(val_data,
                                     batch_size=batch_size,
                                     shuffle=True,
@@ -103,12 +112,20 @@ def load_pretrained_model(device, tf_model:bool):
 #####         Function to recreate the classifier layer of the model                #####
 #########################################################################################
 def recreate_classifier_layer(model: torch.nn.Module, tf_model:bool, dropout: int, class_names: list, seed: int, device):
-    # Freeze all base layers in the "features" section of the model 
+    # Freeze all layers except the last 3 in the "features" section of the model 
     # by setting requires_grad=False
-    if tf_model:
-        for param in model.features.parameters():
-            param.requires_grad = False
 
+    if tf_model:
+        for i in range(7):
+            if i == 6:
+                for n in range(1+15-cfg_hp["trainable_layers"]):
+                    for param in model.features[i][n].parameters():
+                        param.requires_grad = False
+            else:
+                for param in model.features[i].parameters():
+                    param.requires_grad = False
+
+    
     # Set the manual seeds
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -119,14 +136,23 @@ def recreate_classifier_layer(model: torch.nn.Module, tf_model:bool, dropout: in
                             torch.nn.Linear(in_features=1280, 
                             out_features=len(class_names), 
                             bias=True)).to(device)
+    '''
+    model_summary = summary(model, 
+                    input_size=(2, 3, 224, 224), # make sure this is "input_size", not "input_shape"
+                    col_names=["input_size", "output_size", "num_params", "trainable"],
+                    col_width=20,
+                    row_settings=["var_names"],
+                    verbose=0
+                    )
+    print(model_summary)
+    '''
     return model
 
 #########################################################################################
 #####              Function to create a folder for the trained model                #####
 #########################################################################################
-def get_storage_name(targetfolder:str, model_name:str):
-    dateTimeObj = datetime.now()
-    timestampStr = dateTimeObj.strftime("%d%m%Y_%H%M")
+def get_storage_name(targetfolder:str, model_name:str,timestampStr:str):
+
     folderpath = Path(targetfolder + "/" + model_name + "_model" + "_" + timestampStr)
     folderpath.mkdir(parents=True, exist_ok=True)
 
@@ -135,8 +161,8 @@ def get_storage_name(targetfolder:str, model_name:str):
 #########################################################################################
 #####           Function to save the hyperparameters of the trained model           #####
 #########################################################################################
-def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
-    folderpath = get_storage_name(target_dir_new_model, model_name)
+def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict, timestampStr:str):
+    folderpath = get_storage_name(target_dir_new_model, model_name, timestampStr)
     
     dict_path = folderpath / ("hyperparameter_dict.pkl")
     with open(dict_path, "wb") as filestore:
@@ -146,10 +172,10 @@ def store_hyperparameters(target_dir_new_model:str,model_name:str, dict:dict):
 #########################################################################################
 #####                     Function to save the trained model                        #####
 #########################################################################################
-def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyperparameter_dict: dict, trained_epochs:int, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float):
+def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyperparameter_dict: dict, trained_epochs:int, classifier_model:torch.nn.Module, results:dict,batch_size:int, total_train_time:float, timestampStr:str):
     logger.info("Store model, results and hyperparameters...")
     
-    folderpath = store_hyperparameters(target_dir_new_model,model_name, hyperparameter_dict)
+    folderpath = store_hyperparameters(target_dir_new_model,model_name, hyperparameter_dict, timestampStr)
     model_path = folderpath / ("model.pkl")
     results_path = folderpath / ("results.pkl")
     summary_path = folderpath / ("summary.pkl")
@@ -188,11 +214,33 @@ def store_model(target_dir_new_model: str, tf_model:bool, model_name: str, hyper
     df["train_acc"] = [list(results["train_acc"])[-1]]
     df["val_loss"] = [list(results["val_loss"])[-1]]
     df["val_acc"] = [list(results["val_acc"])[-1]]
-    try:
+   
+    update_df = False
+    path = Path('models/models_results.csv')
+
+    if path.is_file() == True:
         df_exist = pd.read_csv('models/models_results.csv')
-        df_new = pd.concat([df_exist, df],ignore_index=True)
-        df_new.to_csv('models/models_results.csv',index=False)
-    except:
+        for i in range(df_exist.shape[0]):
+            if Path(df["model_path"][0]) == Path(df_exist["model_path"].iloc[i]):
+                logger.info("Update model results in csv file")
+                df_exist.loc[i,"total_train_time"] = df["total_train_time"][0]
+                df_exist.loc[i,"trained_epochs"] = df["trained_epochs"][0]
+                df_exist.loc[i,"train_loss"] = df["train_loss"][0]
+                df_exist.loc[i,"train_acc"] = df["train_acc"][0]
+                df_exist.loc[i,"val_loss"] = df["val_loss"][0]
+                df_exist.loc[i,"val_acc"] = df["val_acc"][0]
+                update_df = True
+            else: 
+                continue
+        
+        if update_df == True:
+            df_exist.to_csv('models/models_results.csv',index=False)
+        else:
+            logger.info("Add new model results in csv file")
+            df_new = pd.concat([df_exist, df],ignore_index=True)
+            df_new.to_csv('models/models_results.csv',index=False)
+    else:
+        logger.info("Create csv file for storing model results")
         df.to_csv('models/models_results.csv',index=False)
 
     
@@ -260,6 +308,8 @@ def plot_loss_acc_curves(model_folder:str):
     plt.plot(epochs, val_loss, label="val_loss")
     plt.title("Loss")
     plt.xlabel("Epochs")
+    axl = plt.gca()
+    axl.set_ylim([0, 1.4])
     plt.legend()
 
     # Plot accuracy
@@ -269,7 +319,8 @@ def plot_loss_acc_curves(model_folder:str):
     plt.title("Accuracy")
     plt.xlabel("Epochs")
     plt.legend()
-
+    axa = plt.gca()
+    axa.set_ylim([0.3, 1])
     plt.savefig(model_folder + "/" + "train_loss_acc.png")
     plt.show()
 
@@ -350,12 +401,17 @@ def pred_on_single_image(image_path:str, model_folder:str,device):
     class_names = ['paper', 'rock', 'scissors']
 
     weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
-    auto_transforms = weights.transforms()
+    #auto_transforms = weights.transforms()
+    manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
 
 
-    pred_and_plot_image(trained_model, image_path, class_names, auto_transforms, device=device)
+    pred_and_plot_image(trained_model, image_path, class_names, manual_transforms, device=device)
 
 
 #########################################################################################
@@ -371,7 +427,12 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
     class_names = ['paper', 'rock', 'scissors']
 
     weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
-    auto_transforms = weights.transforms()
+    manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    #auto_transforms = weights.transforms()
 
     valid_image_path_list = list(Path(image_folder).glob("*/*.*")) # get list all image paths from val data 
     valid_image_path_sample = random.sample(population=valid_image_path_list, # go through all of the val image paths
@@ -388,7 +449,7 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
         pred_and_plot_image(model=trained_model, 
                             image_path=image_path,
                             class_names=class_names,
-                            transform=auto_transforms,
+                            transform=manual_transforms,
                             ax = ax,
                             device=device)
     if num_images%2 != 0:
@@ -405,6 +466,8 @@ def test_model(model_folder, test_folder):
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
     accuracy = []
+    predictions = []
+    y_test = []
 
     for image_path in image_path_list:
         # Load in image and convert the tensor values to float32
@@ -415,9 +478,13 @@ def test_model(model_folder, test_folder):
 
         weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
         auto_transforms = weights.transforms()
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
 
         # Transform if necessary
-        target_image = auto_transforms(target_image)
+        target_image = manual_transforms(target_image)
 
         # Turn on model evaluation mode and inference mode
         trained_model.eval()
@@ -436,10 +503,16 @@ def test_model(model_folder, test_folder):
         target_image_pred_label = torch.argmax(target_image_pred_probs, dim=1)
         pred_class = class_names[target_image_pred_label.item()]
         true_class = image_path.parts[2]  
+        predictions.append(target_image_pred_label.item()) 
+        y_test.append(class_names.index(true_class))
         if pred_class == true_class:
             accuracy.append(1)
         else:
             accuracy.append(0)
+
+    ConfusionMatrixDisplay.from_predictions(y_test,predictions, display_labels=class_names, cmap='Blues',colorbar=False)
+    plt.savefig(model_folder + '/test_confusion_matrix.png')
+    plt.show()
     
     print("Accuracy on test set: " + str(sum(accuracy)/len(accuracy)*100) + " %")
 
@@ -548,10 +621,14 @@ def train(target_dir_new_model: str,
     # Start the timer
     start_time = timer()
 
+    dateTimeObj = datetime.now()
+    timestampStr = dateTimeObj.strftime("%d%m%Y_%H%M")
+
     #Auxilary variables
     early_stopping = 0
     max_acc = 0
     trained_epochs = 0
+    model_folder = ''
     # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
         trained_epochs = epoch+1
@@ -587,21 +664,22 @@ def train(target_dir_new_model: str,
         if results["val_acc"][-1] < max_acc:
             early_stopping = early_stopping + 1
         else:
+            # End the timer and print out how long it took
+            end_time = timer()
+
+            time.sleep(10)
+            total_train_time = end_time-start_time
+            model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, trained_epochs, model, results,batch_size, total_train_time, timestampStr)
+            
             early_stopping = 0
         
+        if epoch < 9:
+            early_stopping = 0
+
         if early_stopping == cfg_hp["patience"]:
             break
         else:
             continue
-
-    # End the timer and print out how long it took
-    end_time = timer()
-
-    time.sleep(10)
-    total_train_time = end_time-start_time
-    print(f"[INFO] Total training time: {total_train_time:.3f} seconds")
-
-    model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, trained_epochs, model, results,batch_size, total_train_time)
 
     # Return the filled results at the end of the epochs
     return results, model_folder
@@ -621,13 +699,14 @@ def train_new_TransferLearning_model(dataset_path:str, tf_model:bool):
 
     
     for s in range(len(cfg_hp["seed"])):
-        split_dataset=True
+        split_dataset=False
         for b in range(len(cfg_hp["batch_size"])):
             for l in range(len(cfg_hp["lr"])):
                 for d in range(len(cfg_hp["dropout"])):
                     if split_dataset:
                         split(original_dataset_dir='data_original', seed=cfg_hp["seed"][s])
                         split_dataset = False
+                        
 
                     # Load pretrained model, weights and the transforms
                     model, weights = load_pretrained_model(device, tf_model=tf_model)

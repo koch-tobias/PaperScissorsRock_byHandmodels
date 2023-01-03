@@ -8,29 +8,29 @@ from loguru import logger
 if __name__ == "__main__":
     # Define dataset path
     dataset_path = 'data_combined' 
-    model_folder = "models/Baseline_model_05122022_1614"
+    model_folder = "models/TransferLearning_model_30122022_2220"
     test_folder = "data_combined/test"
     single_image_path = ""
 
     # Set parameter for testing
-    num_images = 6
+    num_images = 6 
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = True
+    train_new_transferlearning_model = False
     train_new_baseline_model = False
-    test_existing_model = False
+    test_existing_model = True
     prediction_on_single_image = False
     prediction_on_images = False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
         model_folder = train_new_TransferLearning_model(dataset_path=dataset_path,tf_model=True)
-        logger.info("Congratulations, the training was successful!")
+        logger.info("Congratulations, training the Transfer Learning models was successful!")
 
     if train_new_baseline_model:
-        logger.info("Start training a new model with Transfer Learning...")
+        logger.info("Start training a new Baseline model...")
         model_folder = train_new_TransferLearning_model(dataset_path=dataset_path,tf_model=False)
-        logger.info("Congratulations, the training was successful!")
+        logger.info("Congratulations, training the baseline models was successful!")
 
     if test_existing_model:
         logger.info("Display the train/validation loss/accuracy curves of the trained model:")
