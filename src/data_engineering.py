@@ -24,6 +24,8 @@ from torchvision.transforms import transforms
 from skimage.util import random_noise
 from tqdm import tqdm
 import random
+import albumentations as A
+import cv2
 
 # %% [markdown]
 # ## Function to list and count the number of dircetories inside a folder
@@ -51,15 +53,15 @@ def plot_image_grid(images, labels, subfolder,dataset):
         for n in range(len(labels)):
             if len(subfolder) == 1:
                 axarr[n].imshow(images[count_img])
-                axarr[n].grid(False)     
+                axarr[n].grid(False)
                 axarr[n].set_xticks([])
                 axarr[n].set_yticks([])
                 if count_img < len(labels):
                     axarr[n].set_title(labels[n],**font)
-                count_img = count_img + 1     
+                count_img = count_img + 1
             else:
                 axarr[i,n].imshow(images[count_img])
-                axarr[i,n].grid(False)     
+                axarr[i,n].grid(False)
                 axarr[i,n].set_xticks([])
                 axarr[i,n].set_yticks([])
                 if n == 0:
@@ -88,8 +90,8 @@ def count_subfolder(folder_path: str):
 def analyze_dataset(dataset_dir):
     subfolder = ['test','train','val']
     subfolder_labels = ['rock','paper','scissors']
-    
- 
+
+
     datasets, num_datasets = loading(dataset_dir)
 
     if '.DS_Store' in datasets:
@@ -97,7 +99,7 @@ def analyze_dataset(dataset_dir):
     else:
         print("Analyzing " + str(num_datasets) + " datasets...")
 
-    
+
     for dataset in datasets:
         totel_num_images = 0
         temp_images = []
@@ -162,7 +164,7 @@ def analyze_eval_dataset(dataset_dir):
                 img = Image.open(dataset_dir + "/" + img)
                 temp_images.append(img)
             count = count + 1
-    
+
     # Plot the images
     f, axarr = plt.subplots(4,4)
     count_img = 0
@@ -170,22 +172,22 @@ def analyze_eval_dataset(dataset_dir):
     for i in range(4):
         for n in range(4):
             axarr[i,n].imshow(temp_images[count_img])
-            axarr[i,n].grid(False)     
+            axarr[i,n].grid(False)
             axarr[i,n].set_xticks([])
             axarr[i,n].set_yticks([])
-            count_img = count_img + 1 
+            count_img = count_img + 1
 
     plt.savefig("../images/datasets/sampels_evaldataset.png")
     print("Total number of images in the eval dataset: " + str(num_images))
 # %% [markdown]
 # ## Combining the datasets and saving in a new folder
 
-# %% 
+# %%
 def add_new_dataset(dataset_path: str):
     split = ['test','train','val']
     labels = ['rock','paper','scissors']
-    target_path = '../data_combined'
-     
+    target_path = '../data_combined/dataset_witout_split/'
+
     subfolders, num_subfolders = loading(dataset_path)
     dir_depth = count_subfolder(folder_path=dataset_path)
 
@@ -213,8 +215,6 @@ def add_new_dataset(dataset_path: str):
                         src = path_labels + "/" + img
                         shutil.copy(src, dst)
 
-    rgba_to_rgb()
-
     print("Dataset successfully added!")
 
 # %% [markdown]
@@ -239,7 +239,6 @@ def split(original_dataset_dir: str,seed: int):
 
     rgba_to_rgb()
 
-
 # %% [markdown]
 # ## Function to transform images to same size
 
@@ -255,7 +254,7 @@ def transform_img(img_path: str):
 # ## Function to transform images from RGBA to RGB
 
 # %%
-def rgba_to_rgb(dir_dataset="data_combined"):
+def rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted"):
     #Convert all rgba images as rbg images and replace it in the dataset
     split = ['test','train','val']
     labels = ['rock','paper','scissors']
@@ -290,10 +289,10 @@ def rgba_to_rgb(dir_dataset="data_combined"):
             continue
 
 # %% [markdown]
-# ## Functions for analyzing selected Data Augmentation techniques 
+# ## Functions for analyzing selected Data Augmentation techniques
 
 # %%
-def shift_image(image_path:str): 
+def shift_image(image_path:str):
     #shift image in different areas like forward, backward ,top
     img = np.array(Image.open(image_path))
 
@@ -366,6 +365,66 @@ def noise(image_path:str):
     plt.savefig("../images/data_augmentation/example_noise.png")
     plt.show()
 
+def spatial_distortion(image_path:str):
+    img = Image.open(image_path)
+    im_arr = np.asarray(img)
+    transform = A.Compose([
+    A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+    A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+    ])
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_dist.png")
+    plt.show()
+
+
+# In Albumentations, this interface is available as A.Compose() which lets us define the augmentation pipeline with the list of augmentations we want to use
+
+#applying combination of data augmentation techniques: RandomCrop,HorizontalFlip,RandomBrightnessContrast
+def comb_transformation_1(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    A.RandomCrop(width=256, height=256),
+    A.HorizontalFlip(p=0.5),
+    A.RandomBrightnessContrast(p=0.2),
+    ])
+
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb1.png")
+    plt.show()
+
+#applying combination of data augmentation techniques: RandomSnow,HueSaturation,ChannelShuffle
+def comb_transformation_2(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    A.RandomSnow(brightness_coeff=2.5, snow_point_lower=0.3, snow_point_upper=0.5, p=1),
+    A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=50, val_shift_limit=50, p=1),
+    A.ChannelShuffle(p=1),
+    ], p=1)
+
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb2.png")
+    plt.show()
+#applying combination of data augmentation techniques: ShiftScaleRotate,ColorJitter,MotionBlur,CoarseDropout,ChannelDropout,GridDistortion,OpticalDistortion
+
+def comb_transformation_3(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
+    A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
+    A.MotionBlur(blur_limit=33, p=0.1),
+    A.GaussNoise(var_limit=(0, 255), p=0.1),
+    A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
+    A.ChannelDropout(p=0.05),
+    A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+    A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+    ])
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb3.png")
+    plt.show()
+
 # %%
 def plot_data_augmentation(image_path:str):
     print("Image after random crop:")
@@ -380,15 +439,23 @@ def plot_data_augmentation(image_path:str):
     shift_image(image_path)
     print("Image after adding noise:")
     noise(image_path)
+    print("Image after adding spatial distortion:")
+    spatial_distortion(image_path)
+    print("Image after applying combination of augmentation techniques_1:")
+    comb_transformation_1(image_path)
+    print("Image after applying combination of augmentation techniques_2:")
+    comb_transformation_2(image_path)
+    print("Image after applying combination of augmentation techniques_3:")
+    comb_transformation_3(image_path)
 
 # %%
-#plot_data_augmentation(image_path="../data_own_images/paper/IMG_5042.HEIC")
+plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
 
 # %% [markdown]
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
 
 # %%
-def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False):
+def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,comb_aug1=False,comb_aug2=False,spat=False):
     train_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/train")
     val_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/val")
 
@@ -396,7 +463,7 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
     train_y = []
     val_x = []
     val_y = []
-    
+
     for img in tqdm(train_dataset):
         newsize = (300, 300)
         img_resize = img[0].resize(newsize)
@@ -428,18 +495,59 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
             noise_img = (255*noise_img).astype(np.uint8)
             img_new = Image.fromarray(noise_img)
             train_x.append(np.array(img_new))
-            train_y.append(img[1])  
+            train_y.append(img[1])
         elif img_shift == True:
             im_arr = np.asarray(img_resize)
             img_tensor = torch.tensor(im_arr.transpose([2, 0, 1])).float()
-            affine = kornia.augmentation.RandomAffine(degrees=0, translate=(0.3, 0.3), padding_mode='border')                      
+            affine = kornia.augmentation.RandomAffine(degrees=0, translate=(0.3, 0.3), padding_mode='border')
             shift_img = affine(img_tensor)
             img_new = shift_img.squeeze().permute(1, 2, 0).byte()
             train_x.append(np.array(img_new))
-            train_y.append(img[1])             
+            train_y.append(img[1])
+        elif comb_aug1 == True:
+            transform = A.Compose([
+            A.RandomCrop(width=256, height=256),
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(p=0.2),
+            ])
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        elif comb_aug2 == True:
+            transform = A.Compose([
+            A.RandomSnow(brightness_coeff=2.5, snow_point_lower=0.3, snow_point_upper=0.5, p=1),
+            A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=50, val_shift_limit=50, p=1),
+            A.ChannelShuffle(p=1),
+            ], p=1)
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        elif comb_aug3 == True:
+            transform = A.Compose([
+            A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
+            A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
+            A.MotionBlur(blur_limit=33, p=0.1),
+            A.GaussNoise(var_limit=(0, 255), p=0.1),
+            A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
+            A.ChannelDropout(p=0.05),
+            A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+            A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+            ])
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        elif spat==True:
+            transform = A.Compose([
+            A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+            A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+            ])
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+
         else:
             continue
-    
+
     for img in val_dataset:
         newsize = (300, 300)
         img_resize = img[0].resize(newsize)
@@ -453,7 +561,7 @@ def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img
 
     return train_x, val_x, train_y, val_y
 
-#train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
+train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
 
 # %% [markdown]
 # ## Main-method
