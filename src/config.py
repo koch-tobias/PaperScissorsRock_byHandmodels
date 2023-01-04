@@ -8,3 +8,7 @@ config_hyperparameter = {
     "num_workers": 4,
     "trainable_layers": 3
 }
+
+config_augmentation = {
+    
+}
