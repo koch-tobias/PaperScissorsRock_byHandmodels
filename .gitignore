@@ -1,11 +1,13 @@
 src/__pycache__/
 .idea
 simple_dataset
-models
 src/config.py
 data_original/.DS_Store
+data_combined
+models
 data_original/dataset_1/.DS_Store
 data_original/dataset_2/.DS_Store
 data_original/dataset_3/.DS_Store
 data_original/dataset_4/.DS_Store
 .DS_Store
+.gitignore

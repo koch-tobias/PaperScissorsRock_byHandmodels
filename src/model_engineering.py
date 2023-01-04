@@ -27,22 +27,24 @@ import random
 import time
 import math
 from data_engineering import split
+from data_engineering import manual_transformation_augmentation
 from config import config_hyperparameter as cfg_hp
 
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int):
+def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int, augmentation:bool):
 
     # Get the transforms used to create our pretrained weights
-    #auto_transforms = weights.transforms()
-    manual_transforms = transforms.Compose([
-                            transforms.Resize((384,384)),
-                            transforms.ToTensor(),
-                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                            ])
-    #logger.info("Get the data transforms that were used to train the model on ImageNet:")
-    #logger.info(auto_transforms)
+    if augmentation:
+        manual_transforms = manual_transformation_augmentation()
+    else:
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+
 
     # Create training and valing DataLoaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
@@ -136,16 +138,7 @@ def recreate_classifier_layer(model: torch.nn.Module, tf_model:bool, dropout: in
                             torch.nn.Linear(in_features=1280, 
                             out_features=len(class_names), 
                             bias=True)).to(device)
-    '''
-    model_summary = summary(model, 
-                    input_size=(2, 3, 224, 224), # make sure this is "input_size", not "input_shape"
-                    col_names=["input_size", "output_size", "num_params", "trainable"],
-                    col_width=20,
-                    row_settings=["var_names"],
-                    verbose=0
-                    )
-    print(model_summary)
-    '''
+
     return model
 
 #########################################################################################
@@ -397,16 +390,17 @@ def pred_and_plot_image(model: torch.nn.Module,
 #########################################################################################
 #####                 Function to make predictions on single images                 #####
 #########################################################################################
-def pred_on_single_image(image_path:str, model_folder:str,device):
+def pred_on_single_image(image_path:str, model_folder:str,augmentation:bool,device):
     class_names = ['paper', 'rock', 'scissors']
-
-    weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
-    #auto_transforms = weights.transforms()
-    manual_transforms = transforms.Compose([
-                            transforms.Resize((384,384)),
-                            transforms.ToTensor(),
-                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                            ])
+    
+    if augmentation:
+        manual_transforms = manual_transformation_augmentation()
+    else:
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
 
@@ -417,7 +411,7 @@ def pred_on_single_image(image_path:str, model_folder:str,device):
 #########################################################################################
 #####                     Function to evaluate an existing model                    #####
 #########################################################################################
-def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
+def pred_on_example_images(model_folder:str, image_folder:str, num_images:int, augmentation:bool):
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -426,13 +420,14 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
 
-    weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
-    manual_transforms = transforms.Compose([
-                            transforms.Resize((384,384)),
-                            transforms.ToTensor(),
-                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                            ])
-    #auto_transforms = weights.transforms()
+    if augmentation:
+        manual_transforms = manual_transformation_augmentation()
+    else:
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
 
     valid_image_path_list = list(Path(image_folder).glob("*/*.*")) # get list all image paths from val data 
     valid_image_path_sample = random.sample(population=valid_image_path_list, # go through all of the val image paths
@@ -461,7 +456,7 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int):
 #########################################################################################
 #####                    Functions to test model on unseen data                     #####
 #########################################################################################
-def test_model(model_folder, test_folder):
+def test_model(model_folder, test_folder, augmentation:bool):
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
@@ -475,13 +470,14 @@ def test_model(model_folder, test_folder):
 
         # Divide the image pixel values by 255 to get them between [0, 1]
         target_image = target_image / 255
-
-        weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
-        auto_transforms = weights.transforms()
-        manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
+        
+        if augmentation:
+            manual_transforms = manual_transformation_augmentation()
+        else:
+            manual_transforms = transforms.Compose([
+                                    transforms.Resize((384,384)),
+                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                    ])
 
         # Transform if necessary
         target_image = manual_transforms(target_image)
@@ -684,7 +680,7 @@ def train(target_dir_new_model: str,
     # Return the filled results at the end of the epochs
     return results, model_folder
 
-def train_new_TransferLearning_model(dataset_path:str, tf_model:bool):
+def train_new_model(dataset_path:str, tf_model:bool, activate_augmentation:bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -716,7 +712,8 @@ def train_new_TransferLearning_model(dataset_path:str, tf_model:bool):
                                                                                     val_dir=val_dir, 
                                                                                     weights=weights, 
                                                                                     num_workers=cfg_hp["num_workers"], 
-                                                                                    batch_size=cfg_hp["batch_size"][b]
+                                                                                    batch_size=cfg_hp["batch_size"][b],
+                                                                                    augmentation=activate_augmentation
                                                                                     )
 
                     # Recreate classifier layer

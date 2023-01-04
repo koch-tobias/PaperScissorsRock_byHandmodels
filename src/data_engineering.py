@@ -455,7 +455,7 @@ plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScisso
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
 
 # %%
-def manual_transformation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,comb_aug1=False,comb_aug2=False,spat=False):
+def manual_transformation_augmentation(dir_dataset:str, img_crop=False, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,comb_aug1=False,comb_aug2=False,spat=False):
     train_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/train")
     val_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/val")
 

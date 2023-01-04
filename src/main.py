@@ -1,4 +1,4 @@
-from model_engineering import train_new_TransferLearning_model
+from model_engineering import train_new_model
 from model_engineering import plot_loss_acc_curves
 from model_engineering import pred_on_example_images
 from model_engineering import pred_on_single_image
@@ -21,15 +21,16 @@ if __name__ == "__main__":
     test_existing_model = True
     prediction_on_single_image = False
     prediction_on_images = False
+    activate_Augmentation = False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
-        model_folder = train_new_TransferLearning_model(dataset_path=dataset_path,tf_model=True)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation)
         logger.info("Congratulations, training the Transfer Learning models was successful!")
 
     if train_new_baseline_model:
         logger.info("Start training a new Baseline model...")
-        model_folder = train_new_TransferLearning_model(dataset_path=dataset_path,tf_model=False)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation)
         logger.info("Congratulations, training the baseline models was successful!")
 
     if test_existing_model:
@@ -39,9 +40,9 @@ if __name__ == "__main__":
         test_model(model_folder=model_folder, test_folder=test_folder)  
   
     if prediction_on_images:
-        pred_on_example_images(model_folder=model_folder, image_folder=test_folder, num_images=num_images)
+        pred_on_example_images(model_folder=model_folder, image_folder=test_folder, num_images=num_images, augmentation=activate_Augmentation)
 
     if prediction_on_single_image:
         logger.info("Start classifying the given image...") 
-        pred_on_single_image(image_path=single_image_path, model_folder=model_folder)
+        pred_on_single_image(image_path=single_image_path, model_folder=model_folder, augmentation=activate_Augmentation)
 
