@@ -21,6 +21,8 @@ dependencies:
   - kornia
   - scikit-image
   - torchinfo
+  - albumentations
+  - opencv
  
   # Pip installationen
   - pip:
