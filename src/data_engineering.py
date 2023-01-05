@@ -561,7 +561,7 @@ def manual_transformation_augmentation(dir_dataset:str, img_crop=False, img_gaus
 
     return train_x, val_x, train_y, val_y
 
-train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
+#train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
 
 # %% [markdown]
 # ## Main-method
