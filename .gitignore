@@ -11,3 +11,5 @@ data_original/dataset_3/.DS_Store
 data_original/dataset_4/.DS_Store
 .DS_Store
 .gitignore
+src/__pycache__/data_engineering.cpython-39.pyc
+src/__pycache__/model_engineering.cpython-39.pyc

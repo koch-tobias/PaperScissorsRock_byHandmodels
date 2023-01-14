@@ -27,7 +27,7 @@ import random
 import time
 import math
 from data_engineering import split
-from data_engineering import manual_transformation_augmentation
+from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
 #########################################################################################
@@ -37,7 +37,7 @@ def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_siz
 
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation_augmentation()
+        manual_transforms = manual_transformation(img_crop=True)
     else:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
