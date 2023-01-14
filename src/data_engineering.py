@@ -24,8 +24,8 @@ from torchvision.transforms import transforms
 from skimage.util import random_noise
 from tqdm import tqdm
 import random
-import albumentations as A
-import cv2
+#import albumentations as A
+#import cv2
 
 # %% [markdown]
 # ## Function to list and count the number of dircetories inside a folder
@@ -449,7 +449,7 @@ def plot_data_augmentation(image_path:str):
     comb_transformation_3(image_path)
 
 # %%
-plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
+#plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
 
 # %% [markdown]
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
@@ -561,6 +561,23 @@ def manual_transformation_augmentation(dir_dataset:str, img_crop=False, img_gaus
 
     return train_x, val_x, train_y, val_y
 
+def manual_transformation(img_crop=False):
+    if img_crop==True:
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                T.RandomCrop((250,300), padding=50),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    # if img_gausian==True:
+    # manual_transforms = transforms.Compose([
+    #                         transforms.Resize((384,384)),
+    #                         T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
+    #                         transforms.ToTensor(),
+    #                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+    #                         ])
+    return manual_transforms
+
 #train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
 
 # %% [markdown]
@@ -569,7 +586,6 @@ def manual_transformation_augmentation(dir_dataset:str, img_crop=False, img_gaus
 # %%
 # Analyzing the original datasets
 #analyze_dataset("../data_original")
-
 
 # %%
 # Analyzing the combined dataset
