@@ -398,8 +398,8 @@ def comb_transformation_2(image_path:str):
     img=Image.open(image_path)
     im_arr=np.array(img)
     transform = A.Compose([
-    A.RandomSnow(brightness_coeff=2.5, snow_point_lower=0.3, snow_point_upper=0.5, p=1),
-    A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=50, val_shift_limit=50, p=1),
+    A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,rotate_limit=20,intrepolation=1),
+    A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
     A.ChannelShuffle(p=1),
     ], p=1)
 
@@ -518,10 +518,10 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
             train_x.append(np.array(img_new))
             train_y.append(img[1])
         elif comb_aug2 == True:
-            transform = A.Compose([
-            A.RandomSnow(brightness_coeff=2.5, snow_point_lower=0.3, snow_point_upper=0.5, p=1),
-            A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=50, val_shift_limit=50, p=1),
-            A.ChannelShuffle(p=1),
+            transform = A.Compose([A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,
+                           rotate_limit=20,intrepolation=1),
+                           A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
+                        A.ChannelShuffle(p=1),#Randomly rearrange channels of the input RGB image.
             ], p=1)
             img_new=transform(img_resize)
             train_x.append(np.array(img_new))
@@ -589,8 +589,8 @@ def manual_transformation(comb_aug1=False, comb_aug2=False,comb_aug3=False):
     elif comb_aug2==True:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                A.RandomSnow(brightness_coeff=2.5, snow_point_lower=0.3, snow_point_upper=0.5, p=1),
-                                A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=50, val_shift_limit=50, p=1),
+                                A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,rotate_limit=20,intrepolation=1),
+                                A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
                                 A.ChannelShuffle(p=1),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
