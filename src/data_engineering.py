@@ -254,11 +254,12 @@ def transform_img(img_path: str):
 # ## Function to transform images from RGBA to RGB
 
 # %%
-def rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted"):
+def rgba_to_rgb(dir_dataset= "C:/Users/phili/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined"):
     #Convert all rgba images as rbg images and replace it in the dataset
     split = ['test','train','val']
     labels = ['rock','paper','scissors']
     folders, num_folders = loading(dir_dataset)
+
 
     for folder in folders:
         if folder in split:
@@ -449,7 +450,7 @@ def plot_data_augmentation(image_path:str):
     comb_transformation_3(image_path)
 
 # %%
-plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
+#plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
 
 # %% [markdown]
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
@@ -561,7 +562,7 @@ def manual_transformation_augmentation(dir_dataset:str, img_crop=False, img_gaus
 
     return train_x, val_x, train_y, val_y
 
-train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
+#train_x, val_x, train_y, val_y = manual_transformation("../data_combined/dataset_splitted")
 
 # %% [markdown]
 # ## Main-method
