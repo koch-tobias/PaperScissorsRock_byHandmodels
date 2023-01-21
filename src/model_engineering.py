@@ -747,7 +747,5 @@ def train_new_model(dataset_path:str, tf_model:bool, activate_augmentation:bool)
                                         hyperparameter_dict=hyperparameter_dict,
                                         device=device
                                     )
-
-    #plot_loss_acc_curves(results, model_folder,safe_fig=True)
     
     return model_folder
