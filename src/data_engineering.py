@@ -260,6 +260,7 @@ def rgba_to_rgb(dir_dataset="C:/Users/TKC/Desktop/Uni/PaperScissorsRock_byHandmo
     labels = ['rock','paper','scissors']
     folders, num_folders = loading(dir_dataset)
 
+
     for folder in folders:
         if folder in split:
             dir_folder = dir_dataset + "/" + folder
