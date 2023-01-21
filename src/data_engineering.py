@@ -549,8 +549,6 @@ def manual_transformation(comb_aug1=False, comb_aug2=False,comb_aug3=False):
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-
-
     elif comb_aug2==True:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
@@ -560,14 +558,13 @@ def manual_transformation(comb_aug1=False, comb_aug2=False,comb_aug3=False):
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    
     elif comb_aug3==True:
         manual_transforms=transforms.Compose([
-            A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
-            A.GaussNoise(var_limit=(0, 255), p=0.1),
-            A.Blur (blur_limit=7, always_apply=False, p=0.5),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-            ])
+                                A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
+                                A.GaussNoise(var_limit=(0, 255), p=0.1),
+                                A.Blur (blur_limit=7, always_apply=False, p=0.5),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
         
     return manual_transforms
