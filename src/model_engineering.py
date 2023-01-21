@@ -28,7 +28,7 @@ from datetime import datetime
 from timeit import default_timer as timer
 import math
 
-from data_engineering import split
+from data_engineering import manual_transformation_augmentation, split
 from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
@@ -36,13 +36,15 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
+        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True)
     else:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
+                                transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
+                                transforms.RandomRotation(degrees=(60, 90)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
@@ -688,7 +690,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -719,9 +721,9 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                                                               num_workers=cfg_hp["num_workers"],
                                                                               batch_size=cfg_hp["batch_size"][b],
                                                                               augmentation=activate_augmentation,
-                                                                              comb_aug1=comb_aug1, 
-                                                                              comb_aug2=comb_aug2, 
-                                                                              comb_aug3=comb_aug3
+                                                                              img_gausian=img_gausian,
+                                                                              img_hflip=img_hflip,
+                                                                              img_rotation=img_rotation
                                                                               )
 
                     # Recreate classifier layer
