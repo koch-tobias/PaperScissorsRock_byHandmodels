@@ -457,7 +457,16 @@ def plot_data_augmentation(image_path:str):
 
 # %% [markdown]
 # ## Function to transform each image in the dataset so same size and apply selected data augmentation techniques
-
+class AddGaussianNoise(object):
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+        
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 # %%
 def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,spat=False):
     train_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/train")
@@ -606,7 +615,7 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
 #             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 #             ])
 #     return manual_transforms
-def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False):
+def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,img_noise=False):
     if (img_gausian==True and img_rotation==True):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
@@ -615,10 +624,11 @@ def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False):
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif (img_hflip==True):
+    elif (img_hflip==True and img_noise==True):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomHorizontalFlip(p=0.9),                                
+                                transforms.RandomHorizontalFlip(p=0.9),
+                                AddGaussianNoise(0.,1,),                               
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])

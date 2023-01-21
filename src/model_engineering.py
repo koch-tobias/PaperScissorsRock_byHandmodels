@@ -28,7 +28,7 @@ from datetime import datetime
 from timeit import default_timer as timer
 import math
 
-from data_engineering import manual_transformation_augmentation, split
+from data_engineering import AddGaussianNoise, manual_transformation_augmentation, split
 from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
@@ -36,15 +36,23 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool,img_noise: bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True)
-    else:
+        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True,img_hflip=True,img_noise=True)
+    elif(img_gausian==False,img_rotation==False):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
                                 transforms.RandomRotation(degrees=(60, 90)),
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    elif(img_hflip==False,img_noise==False):
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.RandomHorizontalFlip(p=0.9),
+                                AddGaussianNoise(0.,1,), 
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
@@ -690,7 +698,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool,img_noise: bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -723,7 +731,8 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                                                               augmentation=activate_augmentation,
                                                                               img_gausian=img_gausian,
                                                                               img_hflip=img_hflip,
-                                                                              img_rotation=img_rotation
+                                                                              img_rotation=img_rotation,
+                                                                              img_noise=img_noise
                                                                               )
 
                     # Recreate classifier layer

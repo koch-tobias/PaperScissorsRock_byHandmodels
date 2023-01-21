@@ -29,15 +29,16 @@ if __name__ == "__main__":
     img_gausian=True
     img_rotation=True
     img_hflip=False
+    img_noise=False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation,img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation,img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation,img_noise=img_noise)
         logger.info("Congratulations, training the Transfer Learning models was successful!")
 
     if train_new_baseline_model:
         logger.info("Start training a new Baseline model...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation, img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation, img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation,img_noise=img_noise)
         logger.info("Congratulations, training the baseline models was successful!")
 
     if test_existing_model:
