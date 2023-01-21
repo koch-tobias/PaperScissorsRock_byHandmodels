@@ -254,7 +254,7 @@ def transform_img(img_path: str):
 # ## Function to transform images from RGBA to RGB
 
 # %%
-def rgba_to_rgb(dir_dataset="../data_combined/dataset_splitted"):
+def rgba_to_rgb(dir_dataset="C:/Users/TKC/Desktop/Uni/PaperScissorsRock_byHandmodels/data_combined"):
     #Convert all rgba images as rbg images and replace it in the dataset
     split = ['test','train','val']
     labels = ['rock','paper','scissors']

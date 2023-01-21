@@ -456,7 +456,7 @@ def pred_on_example_images(model_folder:str, image_folder:str, num_images:int, a
 #########################################################################################
 #####                    Functions to test model on unseen data                     #####
 #########################################################################################
-def test_model(model_folder, test_folder, augmentation:bool):
+def test_model(model_folder, test_folder):
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
@@ -471,13 +471,11 @@ def test_model(model_folder, test_folder, augmentation:bool):
         # Divide the image pixel values by 255 to get them between [0, 1]
         target_image = target_image / 255
         
-        if augmentation:
-            manual_transforms = manual_transformation_augmentation()
-        else:
-            manual_transforms = transforms.Compose([
-                                    transforms.Resize((384,384)),
-                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                    ])
+
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
 
         # Transform if necessary
         target_image = manual_transforms(target_image)
