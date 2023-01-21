@@ -26,7 +26,7 @@ from PIL import Image
 import random
 import time
 import math
-from data_engineering import split
+from data_engineering import manual_transformation_augmentation, split
 from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
@@ -37,14 +37,13 @@ def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_siz
 
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(img_crop=True)
+        manual_transforms = manual_transformation(comb_aug1=True,comb_aug2=True,comb_aug3=True)
     else:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-
 
     # Create training and valing DataLoaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
