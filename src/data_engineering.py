@@ -9,13 +9,12 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+#import matplotlib.image as mpimg
 import torch
 import torchvision
 import torchvision.transforms as T
 from PIL import Image
-#from torch import nn
-import pandas as pd
+#import pandas as pd
 import os
 import kornia
 import shutil
@@ -25,7 +24,6 @@ from skimage.util import random_noise
 from tqdm import tqdm
 import random
 import albumentations as A
-#import cv2
 
 # %% [markdown]
 # ## Function to list and count the number of dircetories inside a folder
@@ -571,4 +569,5 @@ def manual_transformation(comb_aug1=False, comb_aug2=False,comb_aug3=False):
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
             ])
+        
     return manual_transforms

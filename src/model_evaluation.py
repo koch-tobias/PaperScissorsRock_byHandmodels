@@ -3,16 +3,14 @@
 #####Can interpretable model-agnostic explanations (LIME) make our CNN models for Rock, Paper, Scissors more explainable?
 ###########################################
 import matplotlib.pyplot as plt
-import sklearn.metrics
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, f1_score, recall_score, log_loss
+from sklearn.metrics import ConfusionMatrixDisplay, precision_score, f1_score, recall_score
 from PIL import Image
 import numpy as np
-import os, json
+import os
 import torch
 
 import torchvision
-from torchvision import models, transforms
-from torch.autograd import Variable
+from torchvision import transforms
 from model_engineering import get_model
 from lime import lime_image
 from skimage.segmentation import mark_boundaries

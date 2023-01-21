@@ -7,26 +7,28 @@ import torchvision
 from torch import nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import numpy as np
+from sklearn.metrics import ConfusionMatrixDisplay
 from torchinfo import summary
 from tqdm.auto import tqdm
 import pandas as pd
+#import numpy as np
+import matplotlib.pyplot as plt
+
 from typing import Dict, List, Tuple
-from timeit import default_timer as timer
 from pathlib import Path
-from loguru import logger
-import pickle
-from datetime import datetime
 from os import listdir
 from os.path import isfile, join
-import matplotlib.pyplot as plt
-from typing import List, Tuple
-from PIL import Image
+import pickle
+from loguru import logger
+#from PIL import Image
 import random
+
 import time
+from datetime import datetime
+from timeit import default_timer as timer
 import math
-from data_engineering import manual_transformation_augmentation, split
+
+from data_engineering import split
 from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
@@ -34,10 +36,10 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int, augmentation: bool):
+def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int, augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(comb_aug1=True,comb_aug2=True,comb_aug3=True)
+        manual_transforms = manual_transformation(comb_aug1, comb_aug2, comb_aug3)
     else:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
@@ -686,7 +688,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -717,7 +719,10 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                                                               weights=weights,
                                                                               num_workers=cfg_hp["num_workers"],
                                                                               batch_size=cfg_hp["batch_size"][b],
-                                                                              augmentation=activate_augmentation
+                                                                              augmentation=activate_augmentation,
+                                                                              comb_aug1=comb_aug1, 
+                                                                              comb_aug2=comb_aug2, 
+                                                                              comb_aug3=comb_aug3
                                                                               )
 
                     # Recreate classifier layer

@@ -12,29 +12,32 @@ if __name__ == "__main__":
     dataset_path = 'data_combined' 
     model_folder = "models\TransferLearning_model_31122022_1249"
     test_folder = "data_combined/test"
-    single_image_path = 'C:/Users/phili/DataspellProjects/PaperScissorsRock_byHandmodels/data_combined/test/scissors/scissors_25.jpg'
+    single_image_path = 'data_combined/test\scissors\scissors_1.jpg'
 
     # Set parameter for testing
     num_images = 6 
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = False
+    train_new_transferlearning_model = True
     train_new_baseline_model = False
     test_existing_model = False
     prediction_on_single_image = False
     prediction_on_images = False
-    activate_Augmentation = False
     model_metrices = False
-    LIME_single_Image = True
+    LIME_single_Image = False
+    activate_Augmentation = True
+    comb_aug1 = True
+    comb_aug2 = False
+    comb_aug3 = False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation, comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
         logger.info("Congratulations, training the Transfer Learning models was successful!")
 
     if train_new_baseline_model:
         logger.info("Start training a new Baseline model...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation, comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
         logger.info("Congratulations, training the baseline models was successful!")
 
     if test_existing_model:
