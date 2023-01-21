@@ -31,4 +31,4 @@ dependencies:
     # Data analysis
     - pandas-profiling
     - split-folders
-    - albumentations
+    - albumentations_experimental

@@ -36,10 +36,10 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, weights, num_workers: int, batch_size: int, augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool, comb_aug1: bool, comb_aug2: bool, comb_aug3: bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(comb_aug1, comb_aug2, comb_aug3)
+        manual_transforms = manual_transformation(comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
     else:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
@@ -716,7 +716,6 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                     # Load data
                     train_dataloader, val_dataloader, class_names = load_data(train_dir=train_dir,
                                                                               val_dir=val_dir,
-                                                                              weights=weights,
                                                                               num_workers=cfg_hp["num_workers"],
                                                                               batch_size=cfg_hp["batch_size"][b],
                                                                               augmentation=activate_augmentation,
