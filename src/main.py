@@ -26,18 +26,21 @@ if __name__ == "__main__":
     model_metrices = False
     LIME_single_Image = False
     activate_Augmentation = True
-    comb_aug1 = True
-    comb_aug2 = False
-    comb_aug3 = False
+    img_gausian=True
+    img_rotation=True
+    img_hflip=False
+    img_noise=False
+    img_color_jitter=False
+    img_affine_transform=False
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation, comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=True, activate_augmentation=activate_Augmentation,img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation,img_noise=img_noise,img_color_jitter=img_color_jitter,img_affine_transform=img_affine_transform)
         logger.info("Congratulations, training the Transfer Learning models was successful!")
 
     if train_new_baseline_model:
         logger.info("Start training a new Baseline model...")
-        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation, comb_aug1=comb_aug1, comb_aug2=comb_aug2, comb_aug3=comb_aug3)
+        model_folder = train_new_model(dataset_path=dataset_path,tf_model=False, activate_augmentation=activate_Augmentation, img_gausian=img_gausian,img_hflip=img_hflip,img_rotation=img_rotation,img_noise=img_noise,img_color_jitter=img_color_jitter,img_affine_transform=img_affine_transform)
         logger.info("Congratulations, training the baseline models was successful!")
 
     if test_existing_model:
