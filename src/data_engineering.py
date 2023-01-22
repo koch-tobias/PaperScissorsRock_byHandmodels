@@ -342,16 +342,7 @@ def gausian_blur(image_path:str):
     plt.savefig("../images/data_augmentation/example_gaus.png")
     plt.show()
 # %%
-# def random_crop(image_path:str):
-#     img = Image.open(image_path)
-#     for i in range(3):
-#         for j in range(3):
-#             ax = plt.subplot(4, 4, i*4 + j +1)
-#             transform = T.RandomCrop((250,300), padding=50)
-#             img=transform(img)
-#             ax.imshow(img)
-#     plt.savefig("../images/data_augmentation/example_crop.png")
-#     plt.show()
+
 
 # %%
 def noise(image_path:str):
@@ -407,7 +398,6 @@ def comb_transformation_1(image_path:str):
     img=Image.open(image_path)
     im_arr=np.array(img)
     transform = A.Compose([
-    # A.RandomCrop(width=256, height=256),
     A.HorizontalFlip(p=0.5),
     A.RandomBrightnessContrast(p=0.2),
     ])
@@ -509,11 +499,6 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
         img_resize = img[0].resize(newsize)
         train_x.append(np.asarray(img_resize))
         train_y.append(img[1])
-        # if img_crop == True:
-        #     transform = T.RandomCrop((300,300), padding=50)
-        #     img_new=transform(img_resize)
-        #     train_x.append(np.asarray(img_new))
-        #     train_y.append(img[1])
         if img_gausian == True:
             transform = T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9))
             img_new=transform(img_resize)
@@ -616,44 +601,6 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
 
     return train_x, val_x, train_y, val_y
 
-# def manual_transformation(comb_aug1=False, comb_aug2=False,comb_aug3=False):
-#     print(comb_aug1,comb_aug2,comb_aug3)
-#     if comb_aug1==True:
-#         manual_transforms = transforms.Compose([
-#                                 transforms.Resize((384,384)),
-#                                 A.HorizontalFlip(p=0.5),
-#                                 A.RandomBrightnessContrast(p=0.2),
-#                                 transforms.ToTensor(),
-#                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-#                                 ])
-
-#     # if img_gausian==True:
-#     # manual_transforms = transforms.Compose([
-#     #                         transforms.Resize((384,384)),
-#     #                         T.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
-#     #                         transforms.ToTensor(),
-#     #                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-#     #                         ])
-#     elif comb_aug2==True:
-#         manual_transforms = transforms.Compose([
-#                                 transforms.Resize((384,384)),
-#                                 A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,rotate_limit=20,intrepolation=1),
-#                                 A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
-#                                 A.ChannelShuffle(p=1),
-#                                 transforms.ToTensor(),
-#                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-#                                 ])
-        
-    
-#     elif comb_aug3==True:
-#         manual_transforms=transforms.Compose([
-#             A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
-#             A.GaussNoise(var_limit=(0, 255), p=0.1),
-#             A.Blur (blur_limit=7, always_apply=False, p=0.5),
-#             transforms.ToTensor(),
-#             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-#             ])
-#     return manual_transforms
 def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,img_noise=False,img_color_jitter=False,img_affine_transform=False):
     if (img_gausian==True and img_rotation==True):
         manual_transforms = transforms.Compose([
