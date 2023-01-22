@@ -376,58 +376,81 @@ def spatial_distortion(image_path:str):
     plt.savefig("../images/data_augmentation/example_dist.png")
     plt.show()
 
+def colour_jitter(image_path:str):
+    img = Image.open(image_path)
+    for i in range(3):
+        for j in range(3):
+            ax = plt.subplot(4, 4, i*4 + j +1)
+            transform = transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1)
+            ax.imshow(img)
+    plt.savefig("../images/data_augmentation/colour_jitter.png")
+    plt.show()
+
+def random_affine(image_path:str):
+    img = Image.open(image_path)
+    for i in range(3):
+        for j in range(3):
+            ax = plt.subplot(4, 4, i*4 + j +1)
+            transform = transforms.RandomAffine(degrees=(30, 70),
+            translate=(0.1, 0.3), scale=(0.5, 0.75))
+            ax.imshow(img)
+    plt.savefig("../images/data_augmentation/random_affine.png")
+    plt.show()
+    
+
+
 
 # In Albumentations, this interface is available as A.Compose() which lets us define the augmentation pipeline with the list of augmentations we want to use
 
 #applying combination of data augmentation techniques: RandomCrop,HorizontalFlip,RandomBrightnessContrast
-# def comb_transformation_1(image_path:str):
-#     img=Image.open(image_path)
-#     im_arr=np.array(img)
-#     transform = A.Compose([
-#     # A.RandomCrop(width=256, height=256),
-#     A.HorizontalFlip(p=0.5),
-#     A.RandomBrightnessContrast(p=0.2),
-#     ])
+def comb_transformation_1(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    # A.RandomCrop(width=256, height=256),
+    A.HorizontalFlip(p=0.5),
+    A.RandomBrightnessContrast(p=0.2),
+    ])
 
-#     plt.imshow(transform(image=im_arr)['image'])
-#     plt.savefig("../images/data_augmentation/example_comb1.png")
-#     plt.show()
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb1.png")
+    plt.show()
 
 #applying combination of data augmentation techniques: RandomSnow,HueSaturation,ChannelShuffle
-# def comb_transformation_2(image_path:str):
-#     img=Image.open(image_path)
-#     im_arr=np.array(img)
-#     transform = A.Compose([
-#     A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,rotate_limit=20,intrepolation=1),
-#     A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
-#     A.ChannelShuffle(p=1),
-#     ], p=1)
+def comb_transformation_2(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,rotate_limit=20,intrepolation=1),
+    A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
+    A.ChannelShuffle(p=1),
+    ], p=1)
 
-#     plt.imshow(transform(image=im_arr)['image'])
-#     plt.savefig("../images/data_augmentation/example_comb2.png")
-#     plt.show()
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb2.png")
+    plt.show()
 #applying combination of data augmentation techniques: ShiftScaleRotate,ColorJitter,MotionBlur,CoarseDropout,ChannelDropout,GridDistortion,OpticalDistortion
 
-# def comb_transformation_3(image_path:str):
-#     img=Image.open(image_path)
-#     im_arr=np.array(img)
-#     transform = A.Compose([
-#     A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
-#     A.GaussNoise(var_limit=(0, 255), p=0.1),
-#     A.Blur (blur_limit=7, always_apply=False, p=0.5),
+def comb_transformation_3(image_path:str):
+    img=Image.open(image_path)
+    im_arr=np.array(img)
+    transform = A.Compose([
+    A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
+    A.GaussNoise(var_limit=(0, 255), p=0.1),
+    A.Blur (blur_limit=7, always_apply=False, p=0.5),
 
-    # A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
-    # A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
-    # A.MotionBlur(blur_limit=33, p=0.1),
-    # A.GaussNoise(var_limit=(0, 255), p=0.1),
-    # A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
-    # A.ChannelDropout(p=0.05),
-    # A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
-    # A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
-    # ])
-    # plt.imshow(transform(image=im_arr)['image'])
-    # plt.savefig("../images/data_augmentation/example_comb3.png")
-    # plt.show()
+    A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
+    A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
+    A.MotionBlur(blur_limit=33, p=0.1),
+    A.GaussNoise(var_limit=(0, 255), p=0.1),
+    A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
+    A.ChannelDropout(p=0.05),
+    A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+    A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+    ])
+    plt.imshow(transform(image=im_arr)['image'])
+    plt.savefig("../images/data_augmentation/example_comb3.png")
+    plt.show()
 
 # %%
 def plot_data_augmentation(image_path:str):
@@ -445,12 +468,16 @@ def plot_data_augmentation(image_path:str):
     noise(image_path)
     print("Image after adding spatial distortion:")
     spatial_distortion(image_path)
-    # print("Image after applying combination of augmentation techniques_1:")
-    # comb_transformation_1(image_path)
-    # print("Image after applying combination of augmentation techniques_2:")
-    # comb_transformation_2(image_path)
-    # print("Image after applying combination of augmentation techniques_3:")
-    # comb_transformation_3(image_path)
+    print("Image after colour jitter:")
+    colour_jitter(image_path)
+    print("Image after affine transform:")
+    random_affine(image_path)
+    print("Image after applying combination of augmentation techniques_1:")
+    comb_transformation_1(image_path)
+    print("Image after applying combination of augmentation techniques_2:")
+    comb_transformation_2(image_path)
+    print("Image after applying combination of augmentation techniques_3:")
+    comb_transformation_3(image_path)
 
 # %%
 #plot_data_augmentation(image_path="/Users/satyamapantagomeza/Desktop/PaperScissorsRock_byHandmodels/data_original/dataset_1/paper/paper-hires1_png.rf.bf14bb5fd86e4d28a00897e40459f192.jpg")
@@ -468,7 +495,7 @@ class AddGaussianNoise(object):
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 # %%
-def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,spat=False):
+def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_rotation=False, img_hflip=False, img_noise=False, img_shift=False,spat=False,comb_aug1=False,comb_aug2=False,comb_aug3=False,img_color_jitter=False,img_affine_transform=False):
     train_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/train")
     val_dataset = torchvision.datasets.ImageFolder(root=dir_dataset + "/val")
 
@@ -517,41 +544,53 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
             img_new = shift_img.squeeze().permute(1, 2, 0).byte()
             train_x.append(np.array(img_new))
             train_y.append(img[1])
-        # elif comb_aug1 == True:
-        #     transform = A.Compose([
-        #     # A.RandomCrop(width=256, height=256),
-        #     A.HorizontalFlip(p=0.5),
-        #     A.RandomBrightnessContrast(p=0.2),
-        #     ])
-        #     img_new=transform(img_resize)
-        #     train_x.append(np.array(img_new))
-        #     train_y.append(img[1])
-        # elif comb_aug2 == True:
-        #     transform = A.Compose([A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,
-        #                    rotate_limit=20,intrepolation=1),
-        #                    A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
-        #                 A.ChannelShuffle(p=1),#Randomly rearrange channels of the input RGB image.
-        #     ], p=1)
-        #     img_new=transform(img_resize)
-        #     train_x.append(np.array(img_new))
-        #     train_y.append(img[1])
-        # elif comb_aug3 == True:
-        #     transform = A.Compose([
-        #     A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
-        #     A.GaussNoise(var_limit=(0, 255), p=0.1),
-        #     A.Blur (blur_limit=7, always_apply=False, p=0.5),
-        #     # A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
-        #     # A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
-        #     # A.MotionBlur(blur_limit=33, p=0.1),
-        #     # A.GaussNoise(var_limit=(0, 255), p=0.1),
-        #     # A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
-        #     # A.ChannelDropout(p=0.05),
-        #     # A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
-        #     # A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
-        #     ])
-        #     img_new=transform(img_resize)
-        #     train_x.append(np.array(img_new))
-        #     train_y.append(img[1])
+        if img_color_jitter == True:
+            transform = transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1)
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        if img_affine_transform == True:
+            transform = transforms.RandomAffine(degrees=(30, 70),
+            translate=(0.1, 0.3), scale=(0.5, 0.75))            
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+
+        elif comb_aug1 == True:
+            transform = A.Compose([
+            # A.RandomCrop(width=256, height=256),
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(p=0.2),
+            ])
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        elif comb_aug2 == True:
+            transform = A.Compose([A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1,
+                           rotate_limit=20,intrepolation=1),
+                           A.Superpixels(p_replace=0.1, n_segments=100, max_size=128, interpolation=1, always_apply=False, p=0.5),
+                        A.ChannelShuffle(p=1),#Randomly rearrange channels of the input RGB image.
+            ], p=1)
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
+        elif comb_aug3 == True:
+            transform = A.Compose([
+            A.RGBShift(r_shift_limit=20, g_shift_limit=20, b_shift_limit=20, always_apply=False, p=0.5),
+            A.GaussNoise(var_limit=(0, 255), p=0.1),
+            A.Blur (blur_limit=7, always_apply=False, p=0.5),
+            # A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
+            # A.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.2,p=0.5),
+            # A.MotionBlur(blur_limit=33, p=0.1),
+            # A.GaussNoise(var_limit=(0, 255), p=0.1),
+            # A.CoarseDropout(max_holes=6, max_height=32, max_width=32, p=0.1),
+            # A.ChannelDropout(p=0.05),
+            # A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+            # A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+            ])
+            img_new=transform(img_resize)
+            train_x.append(np.array(img_new))
+            train_y.append(img[1])
         elif spat==True:
             transform = A.Compose([
             A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
@@ -615,7 +654,7 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
 #             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 #             ])
 #     return manual_transforms
-def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,img_noise=False):
+def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,img_noise=False,img_color_jitter=False,img_affine_transform=False):
     if (img_gausian==True and img_rotation==True):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
@@ -629,6 +668,14 @@ def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,i
                                 transforms.Resize((384,384)),
                                 transforms.RandomHorizontalFlip(p=0.9),
                                 AddGaussianNoise(0.,1,),                               
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    elif (img_color_jitter==True and img_affine_transform==True):
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
+                                transforms.RandomAffine(degrees=(30, 70),translate=(0.1, 0.3),scale=(0.5, 0.75)),                               
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])

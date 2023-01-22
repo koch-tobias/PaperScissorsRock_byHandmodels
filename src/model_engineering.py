@@ -36,11 +36,11 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool,img_noise: bool):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool,img_noise: bool,img_color_jitter: bool, img_affine_transform: bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True,img_hflip=True,img_noise=True)
-    elif(img_gausian==False,img_rotation==False):
+        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True,img_hflip=True,img_noise=True,img_color_jitter=True,img_affine_transform=True)
+    elif(img_gausian==False and img_rotation==False):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
@@ -48,11 +48,19 @@ def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, a
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif(img_hflip==False,img_noise==False):
+    elif(img_hflip==False and img_noise==False):
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.RandomHorizontalFlip(p=0.9),
                                 AddGaussianNoise(0.,1,), 
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    elif(img_color_jitter==False and img_affine_transform==False):
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
+                                transforms.RandomAffine(degrees=(30, 70),translate=(0.1, 0.3), scale=(0.5, 0.75)),                               
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
@@ -698,7 +706,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool,img_noise: bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool,img_noise: bool,img_color_jitter: bool, img_affine_transform: bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -732,7 +740,9 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                                                               img_gausian=img_gausian,
                                                                               img_hflip=img_hflip,
                                                                               img_rotation=img_rotation,
-                                                                              img_noise=img_noise
+                                                                              img_noise=img_noise,
+                                                                              img_color_jitter=img_color_jitter,
+                                                                              img_affine_transform=img_affine_transform
                                                                               )
 
                     # Recreate classifier layer
