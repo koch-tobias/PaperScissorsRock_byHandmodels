@@ -603,26 +603,26 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
 
     return train_x, val_x, train_y, val_y
 
-def manual_transformation(img_gausian=False,img_rotation=False,img_hflip=False,img_noise=False,img_color_jitter=False,img_affine_transform=False,img_padding=False):
-    if (img_gausian==True and img_rotation==True and img_padding==True):
+def manual_transformation(comb_1: bool, comb_2: bool, comb_3: bool):
+    if comb_1:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.Pad((10, 20, 50, 50)),
-                                transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
+                                #transforms.Pad((10, 20, 50, 50)),
+                                #transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
                                 transforms.RandomRotation(degrees=(60, 90)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif (img_hflip==True and img_noise==True and img_padding==True):
+    elif comb_2:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomHorizontalFlip(p=0.9),
-                                transforms.Pad((10, 20, 50, 50)),
-                                AddGaussianNoise(0.,1,),                               
+                                transforms.RandomHorizontalFlip(p=0.4),
+                                #transforms.Pad((10, 20, 50, 50)),
+                                #AddGaussianNoise(0.,1,),                               
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif (img_color_jitter==True and img_affine_transform==True ):
+    elif comb_3:
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
