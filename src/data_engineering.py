@@ -578,14 +578,14 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
             img_new=transform(img_resize)
             train_x.append(np.array(img_new))
             train_y.append(img[1])
-        elif spat==True:
-            transform = A.Compose([
-            A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
-            A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
-            ])
-            img_new=transform(img_resize)
-            train_x.append(np.array(img_new))
-            train_y.append(img[1])
+        # elif spat==True:
+        #     transform = A.Compose([
+        #     A.GridDistortion(num_steps=5, distort_limit=0.1, p=0.1),
+        #     A.OpticalDistortion(distort_limit=0.2, shift_limit=0.05, p=0.1)
+        #     ])
+        #     img_new=transform(img_resize)
+        #     train_x.append(np.array(img_new))
+        #     train_y.append(img[1])
 
         else:
             continue
@@ -603,33 +603,85 @@ def manual_transformation_augmentation(dir_dataset:str, img_gausian=False,img_ro
 
     return train_x, val_x, train_y, val_y
 
-def manual_transformation(comb_1: bool, comb_2: bool, comb_3: bool):
-    if comb_1:
+# def manual_transformation(comb_1: bool, comb_2: bool, comb_3: bool):
+#     if comb_1:
+#         manual_transforms = transforms.Compose([
+#                                 transforms.Resize((384,384)),
+#                                 transforms.RandomRotation(degrees=(-15, 15)),
+#                                 transforms.ToTensor(),
+#                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+#                                 ])
+#     elif comb_2:
+#         manual_transforms = transforms.Compose([
+#                                 transforms.Resize((384,384)),
+#                                 transforms.RandomHorizontalFlip(p=0.4),                            
+#                                 transforms.ToTensor(),
+#                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+#                                 ])
+#     elif comb_3:
+#         manual_transforms = transforms.Compose([
+#                                 transforms.Resize((384,384)),
+#                                 transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
+#                                 transforms.RandomAffine(degrees=(15),scale=0.05),
+#                                 transforms.ToTensor(),
+#                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+#                                 ])
+#     return manual_transforms
+def manual_transformation(comb_1: bool, comb_2: bool,comb_3: bool,comb_4:bool,comb_5:bool,comb_6:bool,comb_7:bool):
+    if comb_1:#only for rotation
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                #transforms.Pad((10, 20, 50, 50)),
-                                #transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
-                                transforms.RandomRotation(degrees=(60, 90)),
+                                transforms.RandomRotation(degrees=(-15, 15)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif comb_2:
+    elif comb_2:#for rotation,translation,scaling and shearing (parameter values as per the paper)
+        manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.RandomAffine(degree=(-15,15),translate=(-15,15),scale=(0.85,1,15),shear=(0.85,1.15)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    elif comb_3:#for rotation,translation,scaling and shearing (with different parameter values as per the paper)
+        manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.RandomAffine(degree=(-90,90),translate=(-10,10),shear=((-30,30),(-30,30))),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    elif comb_4:#only for horizontal flipping
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomHorizontalFlip(p=0.4),
-                                #transforms.Pad((10, 20, 50, 50)),
-                                #AddGaussianNoise(0.,1,),                               
+                                transforms.RandomHorizontalFlip(p=0.4),                            
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif comb_3:
+    elif comb_5:#horizontal flipping with combination of rotation (parameter values as per the paper)
+        manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.RandomRotation(-30,30),
+                                transforms.RandomHorizontalFlip(p=0.5),#Default p value as per pytorch
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    elif comb_6:#only colour jitter
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
-                                transforms.RandomAffine(degrees=(15),scale=0.05),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
+    
+    elif comb_7:#colour jitter with rotation,translation and horizontal flip
+        manual_transforms = transforms.Compose([
+                        transforms.Resize((384,384)),
+                        transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
+                        transforms.RandomAffine(degrees=(-10,10),translate=any),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.ToTensor(),
+                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                        ])
+        
     return manual_transforms
 
 

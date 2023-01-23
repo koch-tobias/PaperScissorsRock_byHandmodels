@@ -37,36 +37,63 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,img_gausian:bool,img_rotation:bool,img_hflip:bool,img_noise: bool,img_color_jitter: bool, img_affine_transform: bool,img_padding: bool):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,comb_1=True,comb_2=True,comb_3=True,comb_4=True,comb_5=True,comb_6=True,comb_7=True):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(img_gausian=True,img_rotation=True,img_hflip=True,img_noise=True,img_color_jitter=True,img_affine_transform=True,img_padding=True)
-    elif(img_gausian==False and img_rotation==False and img_padding==False):
-        manual_transforms = transforms.Compose([
+        manual_transforms = manual_transformation(comb_1=True,comb_2=True,comb_3=True,comb_4=True,comb_5=True,comb_6=True,comb_7=True)
+    elif comb_1:#only for rotation
+            manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.Pad((10, 20, 50, 50)),
-                                transforms.GaussianBlur(kernel_size=(7, 13), sigma=(9, 9)),
-                                transforms.RandomRotation(degrees=(60, 90)),
+                                transforms.RandomRotation(degrees=(-15, 15)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif(img_hflip==False and img_noise==False and img_padding==False):
-        manual_transforms = transforms.Compose([
+    elif comb_2:#for rotation,translation,scaling and shearing (parameter values as per the paper)
+            manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.RandomAffine(degree=(-15,15),translate=(-15,15),scale=(0.85,1,15),shear=(0.85,1.15)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    elif comb_3:#for rotation,translation,scaling and shearing (with different parameter values as per the paper)
+            manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.RandomAffine(degree=(-90,90),translate=(-10,10),shear=((-30,30),(-30,30))),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
+    elif comb_4:#only for horizontal flipping
+            manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomHorizontalFlip(p=0.9),
-                                AddGaussianNoise(0.,1,), 
-                                transforms.Pad((10, 20, 50, 50)),
+                                transforms.RandomHorizontalFlip(p=0.4),                            
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif(img_color_jitter==False and img_affine_transform==False):
-        manual_transforms = transforms.Compose([
+    elif comb_5:#horizontal flipping with combination of rotation (parameter values as per the paper)
+            manual_transforms = transforms.Compose([
+                                transforms.Resize((384,384)),
+                                transforms.RandomRotation(-30,30),
+                                transforms.RandomHorizontalFlip(p=0.5),#Default p value as per pytorch
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                ])
+    elif comb_6:#only colour jitter
+            manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
                                 transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
-                                transforms.RandomAffine(degrees=(15),scale=0.05),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
+    
+    elif comb_7:#colour jitter with rotation,translation and horizontal flip
+            manual_transforms = transforms.Compose([
+                        transforms.Resize((384,384)),
+                        transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
+                        transforms.RandomAffine(degrees=(-10,10),translate=any),
+                        transforms.RandomHorizontalFlip(p=0.5),
+                        transforms.ToTensor(),
+                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                        ])
 
     # Create training and valing DataLoaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
@@ -709,7 +736,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,img_gausian: bool,img_rotation: bool,img_hflip: bool,img_noise: bool,img_color_jitter: bool, img_affine_transform: bool,img_padding: bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,comb_1=bool,comb_2=bool,comb_3=bool,comb_4=bool,comb_5=bool,comb_6=bool,comb_7=bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -740,13 +767,13 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                                                               num_workers=cfg_hp["num_workers"],
                                                                               batch_size=cfg_hp["batch_size"][b],
                                                                               augmentation=activate_augmentation,
-                                                                              img_gausian=img_gausian,
-                                                                              img_hflip=img_hflip,
-                                                                              img_rotation=img_rotation,
-                                                                              img_noise=img_noise,
-                                                                              img_color_jitter=img_color_jitter,
-                                                                              img_affine_transform=img_affine_transform,
-                                                                              img_padding=img_padding
+                                                                              comb_1=comb_1,
+                                                                              comb_2=comb_2,
+                                                                              comb_3=comb_3,
+                                                                              comb_4=comb_4,
+                                                                              comb_5=comb_5,
+                                                                              comb_6=comb_6,
+                                                                              comb_7=comb_7
                                                                               )
 
                     # Recreate classifier layer
