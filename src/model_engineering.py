@@ -37,63 +37,17 @@ from config import config_hyperparameter as cfg_hp
 #########################################################################################
 #####                          Function to load the dataset                         #####
 #########################################################################################
-def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,comb_1=True,comb_2=True,comb_3=True,comb_4=True,comb_5=True,comb_6=True,comb_7=True):
+def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,comb_1: bool,comb_2: bool,comb_3: bool,comb_4: bool,comb_5: bool,comb_6: bool,comb_7: bool):
     # Get the transforms used to create our pretrained weights
     if augmentation:
-        manual_transforms = manual_transformation(comb_1=True,comb_2=True,comb_3=True,comb_4=True,comb_5=True,comb_6=True,comb_7=True)
-    elif comb_1:#only for rotation
+        manual_transforms = manual_transformation(comb_1=comb_1,comb_2=comb_2,comb_3=comb_3,comb_4=comb_4,comb_5=comb_5,comb_6=comb_6,comb_7=comb_7)
+    else:
             manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomRotation(degrees=(-15, 15)),
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                 ])
-    elif comb_2:#for rotation,translation,scaling and shearing (parameter values as per the paper)
-            manual_transforms = transforms.Compose([
-                            transforms.Resize((384,384)),
-                            transforms.RandomAffine(degree=(-15,15),translate=(-15,15),scale=(0.85,1,15),shear=(0.85,1.15)),
-                            transforms.ToTensor(),
-                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                            ])
-    elif comb_3:#for rotation,translation,scaling and shearing (with different parameter values as per the paper)
-            manual_transforms = transforms.Compose([
-                            transforms.Resize((384,384)),
-                            transforms.RandomAffine(degree=(-90,90),translate=(-10,10),shear=((-30,30),(-30,30))),
-                            transforms.ToTensor(),
-                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                            ])
-    elif comb_4:#only for horizontal flipping
-            manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.RandomHorizontalFlip(p=0.4),                            
-                                transforms.ToTensor(),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
-    elif comb_5:#horizontal flipping with combination of rotation (parameter values as per the paper)
-            manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.RandomRotation(-30,30),
-                                transforms.RandomHorizontalFlip(p=0.5),#Default p value as per pytorch
-                                transforms.ToTensor(),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
-    elif comb_6:#only colour jitter
-            manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
-                                transforms.ToTensor(),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
-    
-    elif comb_7:#colour jitter with rotation,translation and horizontal flip
-            manual_transforms = transforms.Compose([
-                        transforms.Resize((384,384)),
-                        transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
-                        transforms.RandomAffine(degrees=(-10,10),translate=any),
-                        transforms.RandomHorizontalFlip(p=0.5),
-                        transforms.ToTensor(),
-                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                        ])
+ 
 
     # Create training and valing DataLoaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
@@ -220,7 +174,7 @@ def store_hyperparameters(target_dir_new_model: str, model_name: str, dict: dict
 #########################################################################################
 def store_model(target_dir_new_model: str, tf_model: bool, model_name: str, hyperparameter_dict: dict,
                 trained_epochs: int, classifier_model: torch.nn.Module, results: dict, batch_size: int,
-                total_train_time: float, timestampStr: str):
+                total_train_time: float, timestampStr: str, used_combination: int):
     logger.info("Store model, results and hyperparameters...")
 
     folderpath = store_hyperparameters(target_dir_new_model, model_name, hyperparameter_dict, timestampStr)
@@ -250,6 +204,10 @@ def store_model(target_dir_new_model: str, tf_model: bool, model_name: str, hype
     df["model_type"] = [model_name]
     df["model_path"] = [folderpath]
     df["pretrained"] = [tf_model]
+    if used_combination == -1:
+       pass
+    else:
+        df["used_dataaugmention_combination"] = ["comb_"+str(used_combination)]
     df["epochs"] = [hyperparameter_dict["epochs"]]
     df["seed"] = [hyperparameter_dict["seed"]]
     df["learning_rate"] = [hyperparameter_dict["learning_rate"]]
@@ -659,6 +617,7 @@ def train(target_dir_new_model: str,
           batch_size: int,
           epochs: int,
           hyperparameter_dict: dict,
+          used_combination: int,
           device
           ) -> Dict[str, List]:
     # Create empty results dictionary
@@ -720,7 +679,7 @@ def train(target_dir_new_model: str,
             time.sleep(10)
             total_train_time = end_time - start_time
             model_folder = store_model(target_dir_new_model, tf_model, model_name, hyperparameter_dict, trained_epochs,
-                                       model, results, batch_size, total_train_time, timestampStr)
+                                       model, results, batch_size, total_train_time, timestampStr,used_combination)
 
             early_stopping = 0
 
@@ -736,7 +695,7 @@ def train(target_dir_new_model: str,
     return results, model_folder
 
 
-def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,comb_1=bool,comb_2=bool,comb_3=bool,comb_4=bool,comb_5=bool,comb_6=bool,comb_7=bool):
+def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,comb_1: bool,comb_2: bool,comb_3: bool,comb_4: bool,comb_5: bool,comb_6: bool,comb_7: bool):
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
@@ -797,6 +756,13 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                            "learning_rate": cfg_hp["lr"][l], "dropout": cfg_hp["dropout"][d],
                                            "batch_size": cfg_hp["batch_size"][b], "num_workers": cfg_hp["num_workers"]}
 
+                    #List which data augmentation is used
+                    list_data_augmentions = [comb_1,comb_2,comb_3,comb_4,comb_5,comb_6,comb_7]
+                    used_combination = -1
+                    for i in range(len(list_data_augmentions)):
+                        if list_data_augmentions[i] == True:
+                            used_combination = i+1
+
                     # Setup training and save the results
                     results, model_folder = train(target_dir_new_model=target_dir_new_model,
                                         tf_model=tf_model,
@@ -809,6 +775,7 @@ def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bo
                                         batch_size=cfg_hp["batch_size"][b],
                                         epochs=cfg_hp["epochs"],
                                         hyperparameter_dict=hyperparameter_dict,
+                                        used_combination=used_combination,
                                         device=device
                                     )
     

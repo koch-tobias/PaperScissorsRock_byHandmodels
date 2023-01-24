@@ -638,14 +638,14 @@ def manual_transformation(comb_1: bool, comb_2: bool,comb_3: bool,comb_4:bool,co
     elif comb_2:#for rotation,translation,scaling and shearing (parameter values as per the paper)
         manual_transforms = transforms.Compose([
                             transforms.Resize((384,384)),
-                            transforms.RandomAffine(degree=(-15,15),translate=(-15,15),scale=(0.85,1,15),shear=(0.85,1.15)),
+                            transforms.RandomAffine(degrees=(-15,15),translate=(0.15,0.3),scale=(0.85,1.15),shear=(0.85,1.15)),
                             transforms.ToTensor(),
                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                             ])
     elif comb_3:#for rotation,translation,scaling and shearing (with different parameter values as per the paper)
         manual_transforms = transforms.Compose([
                             transforms.Resize((384,384)),
-                            transforms.RandomAffine(degree=(-90,90),translate=(-10,10),shear=((-30,30),(-30,30))),
+                            transforms.RandomAffine(degrees=(-90,90),translate=(0.15,0.3),shear=(0.85,1.15)),
                             transforms.ToTensor(),
                             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                             ])
@@ -659,7 +659,7 @@ def manual_transformation(comb_1: bool, comb_2: bool,comb_3: bool,comb_4:bool,co
     elif comb_5:#horizontal flipping with combination of rotation (parameter values as per the paper)
         manual_transforms = transforms.Compose([
                                 transforms.Resize((384,384)),
-                                transforms.RandomRotation(-30,30),
+                                transforms.RandomRotation((-30,30)),
                                 transforms.RandomHorizontalFlip(p=0.5),#Default p value as per pytorch
                                 transforms.ToTensor(),
                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
@@ -676,7 +676,7 @@ def manual_transformation(comb_1: bool, comb_2: bool,comb_3: bool,comb_4:bool,co
         manual_transforms = transforms.Compose([
                         transforms.Resize((384,384)),
                         transforms.ColorJitter(brightness=1.0, contrast=0.5, saturation=1, hue=0.1),
-                        transforms.RandomAffine(degrees=(-10,10),translate=any),
+                        transforms.RandomAffine(degrees=(-10,10)),
                         transforms.RandomHorizontalFlip(p=0.5),
                         transforms.ToTensor(),
                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),

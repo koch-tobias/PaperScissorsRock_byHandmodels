@@ -26,9 +26,12 @@ if __name__ == "__main__":
     model_metrices = False
     LIME_single_Image = False
     activate_Augmentation = True
-    comb_1=True
-    comb_2=True
-    comb_3=False
+
+    #Set max one combination=True for training the model with data augmention. 
+    #Set activate_Augmentation=False means training without data augmentation
+    comb_1=False
+    comb_2=False
+    comb_3=True
     comb_4=False
     comb_5=False
     comb_6=False
@@ -49,7 +52,6 @@ if __name__ == "__main__":
         logger.info("Display the train/validation loss/accuracy curves of the trained model:")
         plot_loss_acc_curves(model_folder=model_folder)
         logger.info("Start testing the model..") 
-        rgba_to_rgb()
         test_model(model_folder=model_folder, test_folder=test_folder)  
   
     if prediction_on_images:
