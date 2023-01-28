@@ -75,7 +75,7 @@ These following options are available:
     c) Run the main.py file again </br>
   7. Use LIME to see the areas which the model used to make the prediction: </br>
     a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
-    b) Change the path for the variable "single_image_path" to your image you want to evaluate </br>   
+    b) Change the path for the variable "single_image_path" to your image you want to evaluate   
     c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False 
 
 ## Dataset
