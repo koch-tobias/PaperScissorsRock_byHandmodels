@@ -122,7 +122,7 @@ For our project we combined the following five subdatasets:
     <img src="data_original/dataset_6/scissors/scissors_9.jpg" width="150" /> 
 
  
-In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets. The Datasets 1 to 4 are used for training and validation. We used 80% for training and 20% for validation. In addition, the validation set was extenden with dataset 5. Dataset 6 is used as test set.
+In total our combined dataset consists of 10192 images. You can find this dataset which splitted into train, test, and validation sets in the folder "combined_dataset". The Datasets 1 to 4 are used for training and validation. We used 80% for training and 20% for validation. In addition, the validation set was extenden with dataset 5. Dataset 6 is used as test set.
 
 # Project Structure
 The combined dataset is stored in the data_combined folder.The original datasets are stored in the data_orignal folder. The models folder contains the best trained model of the Baseline Model, the Transfer Learning Model, and the Transfer Learning model with Data Augmentation. You can also find there the csv-files with all training information of the models. In the src folder you can find the main.py and all necassary files.
