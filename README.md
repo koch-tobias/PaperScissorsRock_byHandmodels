@@ -75,53 +75,60 @@ These following options are available:
     c) Run the main.py file again </br>
   7. Use LIME to see the areas which the model used to make the prediction: </br>
     a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
-    b) Change the path for the variable "single_image_path" to your image you want to evaluate </br>   
-    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False </br>
+    b) Change the path for the variable "single_image_path" to your image you want to evaluate   
+    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False 
 
 ## Dataset
 For our project we combined the following five subdatasets:
 - [Roboflow Dataset](https://public.roboflow.com/classification/rock-paper-scissors) with 2925 images
   <p float="right">
-    <img src="data_original/dataset_1/train/rock/rock01-000_png.rf.560ebe5b8570f6866c33946448ccf7de.jpg" width="150" />
-    <img src="data_original/dataset_1/train/paper/paper01-000_png.rf.02152baa06324655efacad9c5bda9f1a.jpg" width="150" /> 
-    <img src="data_original/dataset_1/train/scissors/scissors01-000_png.rf.bc8ea3d7b607fa5306391e214675bc07.jpg" width="150" /> 
+    <img src="data_original/dataset_1/rock/rock01-000_png.rf.560ebe5b8570f6866c33946448ccf7de.jpg" width="150" />
+    <img src="data_original/dataset_1/paper/paper01-000_png.rf.02152baa06324655efacad9c5bda9f1a.jpg" width="150" /> 
+    <img src="data_original/dataset_1/scissors/scissors01-000_png.rf.bc8ea3d7b607fa5306391e214675bc07.jpg" width="150" /> 
   </p>
 
 - [Kaggle Dataset](https://www.kaggle.com/datasets/drgfreeman/rockpaperscissors) with 2188 images
   <p float="right">
     <img src="data_original/dataset_2/rock/0bioBZYFCXqJIulm.png" width="150" />
-    <img src="data_original/dataset_2/paper/0a3UtNzl5Ll3sq8K.png" width="150" /> 
-    <img src="data_original/dataset_2/scissors/0CSaM2vL2cWX6Cay.png" width="150" /> 
+    <img src="data_original/dataset_2/paper/0cb6cVL8pkfi4wF6.png" width="150" /> 
+    <img src="data_original/dataset_2/scissors/0ePX1wuCc3et7leL.png" width="150" /> 
   </p>
 
 - [Kaggle Dataset](https://www.kaggle.com/datasets/glushko/rock-paper-scissors-dataset) with 2351 images
   <p float="right">
-    <img src="data_original/dataset_3/train/rock/glu_235.png" width="150" />
-    <img src="data_original/dataset_3/train/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_3/train/scissors/glu_116.png" width="150" /> 
+    <img src="data_original/dataset_3/rock/glu_0.png" width="150" />
+    <img src="data_original/dataset_3/paper/glu_161.png" width="150" /> 
+    <img src="data_original/dataset_3/scissors/glu_116.png" width="150" />
   </p>
+  
 - [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors) with 2419 images
   <p float="right">
-    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
-    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+    <img src="data_original/dataset_4/rock/2017-03-30 07.33.21.jpg" width="150" />
+    <img src="data_original/dataset_4/paper/20140618_191403.jpg" width="150" /> 
+    <img src="data_original/dataset_4/scissors/20150314_203527.jpg" width="150" /> 
   </p>
+  
 - Own validation set created with all class members with 151 images
   <p float="right">
-    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
-    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+    <img src="data_original/dataset_5/rock/rock_2.jpg" width="150" />
+    <img src="data_original/dataset_5/paper/paper_16.png" width="150" /> 
+    <img src="data_original/dataset_5/scissors/scissors_24.jpg" width="150" />
   </p>
+  
  - Own test set created with all class members with 158 images
   <p float="right">
-    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
-    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
-  </p> 
-  
-# Research Questions 
-The results of these research questions can be found in the final report. 
+    <img src="data_original/dataset_6/rock/rock_2.png" width="150" />
+    <img src="data_original/dataset_6/paper/paper_3.jpg" width="150" /> 
+    <img src="data_original/dataset_6/scissors/scissors_9.jpg" width="150" /> 
 
+ 
+In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets. The Datasets 1 to 4 are used for training and validation. We used 80% for training and 20% for validation. In addition, the validation set was extenden with dataset 5. Dataset 6 is used as test set.
+
+# Project Structure
+The combined dataset is stored in the data_combined folder.The original datasets are stored in the data_orignal folder. The models folder contains the best trained model of the Baseline Model, the Transfer Learning Model, and the Transfer Learning model with Data Augmentation. You can also find there the csv-files with all training information of the models. In the src folder you can find the main.py and all necassary files.
+
+# Research Questions 
+The results of these research questions can be found in the final report.
 ## Data Engineering
 In this part we want to consider the research question "Which data augmentation methods can increase the model's performance in classifying images of „Rock, Paper, Scissors“ hand signs?"
 
