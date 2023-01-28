@@ -120,7 +120,7 @@ For our project we combined the following five subdatasets:
     <img src="data_original/dataset_6/rock/rock_2.png" width="150" />
     <img src="data_original/dataset_6/paper/paper_3.jpg" width="150" /> 
     <img src="data_original/dataset_6/scissors/scissors_9.jpg" width="150" /> 
-  </p> 
+
  
 In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets. The Datasets 1 to 4 are used for training and validation. We used 80% for training and 20% for validation. In addition, the validation set was extenden with dataset 5. Dataset 6 is used as test set.
 
