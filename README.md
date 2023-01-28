@@ -103,16 +103,18 @@ For our project we combined the following five subdatasets:
   
 - [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors) with 2419 images
   <p float="right">
-    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
-    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+    <img src="data_original/dataset_4/rock/glu_235.png" width="150" />
+    <img src="data_original/dataset_4/paper/glu_161.png" width="150" /> 
+    <img src="data_original/dataset_4/scissors/glu_116.png" width="150" /> 
   </p>
+  
 - Own validation set created with all class members with 151 images
   <p float="right">
     <img src="data_original/dataset_5/rock/rock_2.jpg" width="150" />
     <img src="data_original/dataset_5/paper/paper_16.png" width="150" /> 
     <img src="data_original/dataset_5/scissors/scissors_24.jpg" width="150" />
   </p>
+  
  - Own test set created with all class members with 158 images
   <p float="right">
     <img src="data_original/dataset_6/rock/rock_2.png" width="150" />
@@ -120,10 +122,10 @@ For our project we combined the following five subdatasets:
     <img src="data_original/dataset_6/scissors/scissors_9.jpg" width="150" /> 
   </p> 
  
-In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets in the data_combined folder.
-The original datasets are stored in the data_orignal folder. The models folder contains the best trained model of the Baseline Model, the Transfer Learning Model, and the Transfer Learning model with Data Augmentation. You can also find there the csv-files with all training information of the models. In the src folder you can find the main.py and all necassary files.
+In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets. The Datasets 1 to 4 are used for training and validation. We used 80% for training and 20% for validation. In addition, the validation set was extenden with dataset 5. Dataset 6 is used as test set.
 
 # Project Structure
+The combined dataset is stored in the data_combined folder.The original datasets are stored in the data_orignal folder. The models folder contains the best trained model of the Baseline Model, the Transfer Learning Model, and the Transfer Learning model with Data Augmentation. You can also find there the csv-files with all training information of the models. In the src folder you can find the main.py and all necassary files.
 
 # Research Questions 
 The results of these research questions can be found in the final report.
