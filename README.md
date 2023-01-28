@@ -1,8 +1,8 @@
 # PaperScissorsRock_byHandmodels
 This project contains the source code and scientific work for the master project "Explainable Machine Learning (xAI-Proj-M)" at the University of Bamberg. 
 
-The goal of the project is to develop a machine learning application considering the three steps data engineering, ML model engineering and ML model evaluation, which are part of the deep learning life cycle.
-A separate research question is processed for each step but our overall goal is to detect the hand signs (paper, rock, scissors) based on images.
+The goal of the project is to develop a machine learning application considering the three steps data engineering, model engineering and model evaluation, which are part of the deep learning life cycle.
+A separate research question is processed for each step but our overall goal is to detect the hand signs paper, scissors, and rock based on images.
 
 <p align="center">
   <img width="300" src="images/CRISP-ML.png">
@@ -22,42 +22,64 @@ Clone the repository on your local device.
 
 ##### Install your environment
 
-Open a PowerShell/Terminal window, navigate to your project folder and setup your environment via `conda env create -f environment.yml`. To update your existing environment use `conda env update`
+Open a PowerShell/Terminal window, navigate to the git project folder and setup your environment via 
+```terminal
+conda env create -f environment.yml
+```
+To update the existing environment use
+```terminal
+conda env update
+```
 
-##### Execute your code local
+##### Execute the code 
 
-Enter following command in your terminal while you are in your project root directory
+Enter the following command in your terminal while you are in your project root directory
 
 ```terminal
 python src/main.py
 ```
 
-The default setting of main.py is to load and evaluate the best model (a transfer learning model) which is based on the efficientNet_B0 model provided by pyTorch.
-It also outputs predictions for random images from the validation dataset.
+The default setting of main.py evaluates our best trainend model on the test set. It displays the confusion matrix and prints out the achievied top-1 accuracy. The model is trained using the EfficientNetV2-S architecture provided by PyTorch which is pretrainend on the ImageNet-1K dataset.
 
 You can change this setting in the main.py file.
 
 These following options are available:
-  1. Train new transfer learning model: </br>
+  1. Train a new transfer learning model: </br>
     a) Set the boole variable "train_new_transferlearning_model" = True </br>
-    b) Set the hyperparameter values you want to use </br>
-    c) Save the changes </br>
-    d) Run the main.py file again </br>
-  2. Evaluate an existing model: </br>
-    a) Change the path for the variable "model_folder" to your model you want to evaluate </br>
-    b) Set the boole variable "evaluate_existing_model" = True </br>
-    c) Set the number of images you want to evaluate in variable "num_images_val" </br>
-    d) Save the changes </br>
+    b) Set the hyperparameter values you want to use for the grid search hyperparameter tuning in the config file </br>
+    c) If you want to use also data augmention for training the model set activate_Augmentation=True and the combination you want to use
+    d) Set all other boolean variables to False </br>
     e) Run the main.py file again </br>
-  3. Make prediction on a single image: </br>
-    a) Change the path for the variable "single_image_path" to your image you want to classify </br>
-    b) Set the boole variable "prediction_on_single_image" = True </br>
-    c) Save the changes </br>
+  2. Train a new baseline model: </br>
+    a) Set the boole variable "train_new_baseline_model" = True </br>
+    b) Set the hyperparameter values you want to use for the grid search hyperparameter tuning in the config file </br>
+    c) If you want to use also data augmention for training the model set activate_Augmentation=True and the combination you want to use
+    d) Set all other boolean variables to False </br>
+    e) Run the main.py file again </br>    
+  3. Test an existing model: </br>
+    a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
+    b) Change the path of the variable "test_folder" to your image path you want to test on </br>
+    c) Set the boole variable "test_existing_model" = True and all other boole values = False </br>
     d) Run the main.py file again </br>
-
+  4. Display some example images with the prediction of the model: </br>
+    a) Change the path for the variable "test_folder" to your image folder you want to make predicitons on </br>
+    b) Set the boole variable "prediction_on_images" = True, all other boole variables = False </br>
+    c) Run the main.py file again </br>
+  5. Display a single image and the prediction of the model: </br>
+    a) Change the path for the variable "single_image_path" to your image you want to classify </br>
+    b) Set the boole variable "prediction_on_single_image" = True, all other boole variables = False </br>
+    c) Run the main.py file again </br>
+  6. Display model metrices: </br>
+    a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
+    b) Set the boole variable "model_metrices" = True, all other boole variables = False </br>
+    c) Run the main.py file again </br>
+  7. Use LIME to see the areas which the model used to make the prediction: </br>
+    a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
+    b) Change the path for the variable "single_image_path" to your image you want to evaluate </br>   
+    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False </br>
 
 ## Dataset
-For our project we combined the following three subdataset with in total 7477 images:
+For our project we combined the following five subdatasets:
 - [Roboflow Dataset](https://public.roboflow.com/classification/rock-paper-scissors) with 2925 images
   <p float="right">
     <img src="data_original/dataset_1/train/rock/rock01-000_png.rf.560ebe5b8570f6866c33946448ccf7de.jpg" width="150" />
@@ -72,17 +94,39 @@ For our project we combined the following three subdataset with in total 7477 im
     <img src="data_original/dataset_2/scissors/0CSaM2vL2cWX6Cay.png" width="150" /> 
   </p>
 
-- [Kaggle Dataset](https://www.kaggle.com/datasets/glushko/rock-paper-scissors-dataset) with 2364 images
+- [Kaggle Dataset](https://www.kaggle.com/datasets/glushko/rock-paper-scissors-dataset) with 2351 images
   <p float="right">
     <img src="data_original/dataset_3/train/rock/glu_235.png" width="150" />
     <img src="data_original/dataset_3/train/paper/glu_161.png" width="150" /> 
     <img src="data_original/dataset_3/train/scissors/glu_116.png" width="150" /> 
   </p>
-- [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors) with 2372 images
+- [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors) with 2419 images
+  <p float="right">
+    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
+    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
+    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+  </p>
+- Own validation set created with all class members with 151 images
+  <p float="right">
+    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
+    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
+    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+  </p>
+ - Own test set created with all class members with 158 images
+  <p float="right">
+    <img src="data_original/dataset_4/train/rock/glu_235.png" width="150" />
+    <img src="data_original/dataset_4/train/paper/glu_161.png" width="150" /> 
+    <img src="data_original/dataset_4/train/scissors/glu_116.png" width="150" /> 
+  </p> 
+  
+# Research Questions 
+The results of these research questions can be found in the final report. 
 
 ## Data Engineering
 In this part we want to consider the research question "Which data augmentation methods can increase the model's performance in classifying images of „Rock, Paper, Scissors“ hand signs?"
+
 ## ML-Model Engineering
 In this part we want to consider the research question "Can transfer learning bring a benefit on the performance of CNN models for Rock, Paper, Scissors?". 
 
 ## Model Evaluation
+Can interpretable model-agnostic-explanations (LIME) make our CNN models for Rock, Paper, Scissors more explainable=
