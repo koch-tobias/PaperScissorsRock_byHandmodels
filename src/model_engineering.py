@@ -406,14 +406,12 @@ def pred_and_plot_image(model: torch.nn.Module,
 #########################################################################################
 #####                 Function to make predictions on single images                 #####
 #########################################################################################
-def pred_on_single_image(image_path: str, model_folder: str, augmentation: bool):
+def pred_on_single_image(image_path: str, model_folder: str):
     class_names = ['paper', 'rock', 'scissors']
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    if augmentation:
-        manual_transforms = manual_transformation_augmentation()
-    else:
-        manual_transforms = transforms.Compose([
+
+    manual_transforms = transforms.Compose([
             transforms.Resize((384, 384)),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
@@ -427,7 +425,7 @@ def pred_on_single_image(image_path: str, model_folder: str, augmentation: bool)
 #########################################################################################
 #####                     Function to evaluate an existing model                    #####
 #########################################################################################
-def pred_on_example_images(model_folder: str, image_folder: str, num_images: int, augmentation: bool):
+def pred_on_example_images(model_folder: str, image_folder: str, num_images: int):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
@@ -435,10 +433,8 @@ def pred_on_example_images(model_folder: str, image_folder: str, num_images: int
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
 
-    if augmentation:
-        manual_transforms = manual_transformation_augmentation()
-    else:
-        manual_transforms = transforms.Compose([
+
+    manual_transforms = transforms.Compose([
             transforms.Resize((384, 384)),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
@@ -472,7 +468,7 @@ def pred_on_example_images(model_folder: str, image_folder: str, num_images: int
 #########################################################################################
 #####                    Functions to test model on unseen data                     #####
 #########################################################################################
-def test_model(model_folder, test_folder, augmentation: bool):
+def test_model(model_folder, test_folder):
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']

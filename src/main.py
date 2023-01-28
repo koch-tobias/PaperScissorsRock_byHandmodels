@@ -10,17 +10,19 @@ from loguru import logger
 if __name__ == "__main__":
     # Define dataset path
     dataset_path = 'data_combined' 
-    model_folder = "models\TransferLearning_model_31122022_1249"
+    model_folder = "models\TransferLearning_model_24012023_0923"
+    #models\TransferLearning_model_23012023_2241
     test_folder = "data_combined/test"
-    single_image_path = 'data_combined/test\scissors\scissors_1.jpg'
+    #test_folder = "data_combined/val"
+    single_image_path = 'data_combined/test/scissors/scissors_1.jpg'
 
     # Set parameter for testing
     num_images = 6 
 
     # Set if you want to train a new model or evualate an existing model
-    train_new_transferlearning_model = True
+    train_new_transferlearning_model = False
     train_new_baseline_model = False
-    test_existing_model = False
+    test_existing_model = True
     prediction_on_single_image = False
     prediction_on_images = False
     model_metrices = False
@@ -36,7 +38,6 @@ if __name__ == "__main__":
     comb_5=False
     comb_6=False
     comb_7=False
-
 
     if train_new_transferlearning_model:
         logger.info("Start training a new model with Transfer Learning...")
@@ -55,15 +56,15 @@ if __name__ == "__main__":
         test_model(model_folder=model_folder, test_folder=test_folder)  
   
     if prediction_on_images:
-        pred_on_example_images(model_folder=model_folder, image_folder=test_folder, num_images=num_images, augmentation=activate_Augmentation)
+        pred_on_example_images(model_folder=model_folder, image_folder=test_folder, num_images=num_images)
 
     if prediction_on_single_image:
         logger.info("Start classifying the given image...") 
-        pred_on_single_image(image_path=single_image_path, model_folder=model_folder, augmentation=activate_Augmentation)
+        pred_on_single_image(image_path=single_image_path, model_folder=model_folder)
 
     if model_metrices:
-        logger.info("Start testing the model...")
-        print_model_metrices(model_folder=model_folder, test_folder=test_folder, augmentation=activate_Augmentation)
+        logger.info("Start printing some model metrices...")
+        print_model_metrices(model_folder=model_folder, test_folder=test_folder)
 
     if LIME_single_Image:
         logger.info("Start using LIME on given image...")
