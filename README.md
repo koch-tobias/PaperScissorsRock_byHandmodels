@@ -76,7 +76,7 @@ These following options are available:
   7. Use LIME to see the areas which the model used to make the prediction: </br>
     a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
     b) Change the path for the variable "single_image_path" to your image you want to evaluate </br>   
-    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False </br>
+    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False 
 
 ## Dataset
 For our project we combined the following five subdatasets:
