@@ -26,6 +26,7 @@ Open a PowerShell/Terminal window, navigate to the git project folder and setup 
 ```terminal
 conda env create -f environment.yml
 ```
+In addition you need PyTorch installed in the environment. This is not included in the yaml-file.
 To update the existing environment use
 ```terminal
 conda env update
