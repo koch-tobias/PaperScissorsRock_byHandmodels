@@ -117,7 +117,7 @@ For our project we combined the following five subdatasets:
   <p float="right">
     <img src="data_original/dataset_6/rock/rock_2.png" width="150" />
     <img src="data_original/dataset_6/paper/paper_3.jpg" width="150" /> 
-    <img src="data_original/dataset_6/scissors/scissors_4.jpg" width="150" /> 
+    <img src="data_original/dataset_6/scissors/scissors_9.jpg" width="150" /> 
   </p> 
  
 In total our combined dataset consists of 10192 images which you can find splitted into train, test, and validation sets in the data_combined folder.
