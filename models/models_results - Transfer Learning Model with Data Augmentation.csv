@@ -1,0 +1,8 @@
+model_type;model_path;pretrained;epochs;seed;learning_rate;dropout;batch_size;num_workers;total_train_time;trained_epochs;train_loss;train_acc;val_loss;val_acc;used_dataaugmention_combination
+TransferLearning;models\TransferLearning_model_23012023_2139;True;100;42;0.001;0.1;64;4;21.14529437;6;0.083196692;0.971900202;0.058402503;0.986213235;comb_1
+TransferLearning;models\TransferLearning_model_23012023_2241;True;100;42;0.001;0.1;64;4;24.89587899;7;0.088726296;0.971648185;0.065981356;0.979779412;comb_2
+TransferLearning;models\TransferLearning_model_23012023_2329;True;100;42;0.001;0.1;64;4;60.01401638;17;0.018261769;0.993195565;0.060422009;0.988051471;comb_4
+TransferLearning;models\TransferLearning_model_24012023_0923;True;100;42;0.001;0.1;64;4;71.71939019;17;0.070372051;0.973394297;0.067952337;0.977941176;comb_6
+TransferLearning;models\TransferLearning_model_24012023_1116;True;100;42;0.001;0.1;64;4;22.17552105;6;0.127014061;0.952998992;0.086377752;0.974724265;comb_7
+TransferLearning;models\TransferLearning_model_24012023_1214;True;100;42;0.001;0.1;64;4;36.44691472;10;0.04833611;0.982358871;0.073420695;0.982536765;comb_5
+TransferLearning;models\TransferLearning_model_24012023_1314;True;100;42;0.001;0.1;64;4;54.54123564;16;0.067601084;0.976184476;0.070110753;0.981617647;comb_3
