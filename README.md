@@ -136,4 +136,4 @@ In this part we want to consider the research question "Which data augmentation 
 In this part we want to consider the research question "Can transfer learning bring a benefit on the performance of CNN models for Rock, Paper, Scissors?". 
 
 ## Model Evaluation
-Can interpretable model-agnostic-explanations (LIME) make our CNN models for Rock, Paper, Scissors more explainable=
+In this part we want to consider the research question "Can interpretable model-agnostic-explanations (LIME) make our CNN models for Rock, Paper, Scissors more explainable?"
