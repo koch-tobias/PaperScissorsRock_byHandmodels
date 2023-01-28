@@ -97,13 +97,13 @@ For our project we combined the following five subdatasets:
 - [Kaggle Dataset](https://www.kaggle.com/datasets/glushko/rock-paper-scissors-dataset) with 2351 images
   <p float="right">
     <img src="data_original/dataset_3/rock/glu_0.png" width="150" />
-    <img src="data_original/dataset_3/paper/glu_161.png" width="150" /> 
-    <img src="data_original/dataset_3/scissors/glu_116.png" width="150" /> 
+    <img src="data_original/dataset_3/paper/20140618_191403.jpg" width="150" /> 
+    <img src="data_original/dataset_3/scissors/20150314_203527.jpg" width="150" /> 
   </p>
   
 - [giusti2018](https://github.com/alessandro-giusti/rock-paper-scissors) with 2419 images
   <p float="right">
-    <img src="data_original/dataset_4/rock/glu_235.png" width="150" />
+    <img src="data_original/dataset_4/rock/2017-03-30 07.33.21.jpg" width="150" />
     <img src="data_original/dataset_4/paper/glu_161.png" width="150" /> 
     <img src="data_original/dataset_4/scissors/glu_116.png" width="150" /> 
   </p>
