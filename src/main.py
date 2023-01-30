@@ -8,32 +8,31 @@ from model_evaluation import print_model_metrices, Lime
 from loguru import logger
 
 if __name__ == "__main__":
-    # Define dataset path
+
+    # Define dataset paths
     dataset_path = 'data_combined' 
     model_folder = "models\TransferLearning_model_24012023_0923"
-    #models\TransferLearning_model_23012023_2241
     test_folder = "data_combined/test"
-    #test_folder = "data_combined/val"
     single_image_path = 'data_combined/test/scissors/scissors_1.jpg'
 
     # Set parameter for testing
     num_images = 6 
 
-    # Set if you want to train a new model or evualate an existing model
+    # Set if you want to train a new model or which evualation you want to make on an existing model
     train_new_transferlearning_model = False
     train_new_baseline_model = False
-    test_existing_model = True
+    test_existing_model = False
     prediction_on_single_image = False
     prediction_on_images = False
     model_metrices = False
     LIME_single_Image = False
-    activate_Augmentation = True
+    activate_Augmentation = False
 
     #Set max one combination=True for training the model with data augmention. 
     #Set activate_Augmentation=False means training without data augmentation
     comb_1=False
     comb_2=False
-    comb_3=True
+    comb_3=False
     comb_4=False
     comb_5=False
     comb_6=False

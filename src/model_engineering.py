@@ -12,7 +12,6 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torchinfo import summary
 from tqdm.auto import tqdm
 import pandas as pd
-#import numpy as np
 import matplotlib.pyplot as plt
 
 from typing import Dict, List, Tuple
@@ -21,7 +20,6 @@ from os import listdir
 from os.path import isfile, join
 import pickle
 from loguru import logger
-#from PIL import Image
 import random
 
 import time
@@ -29,47 +27,49 @@ from datetime import datetime
 from timeit import default_timer as timer
 import math
 
-from data_engineering import AddGaussianNoise, manual_transformation_augmentation, split
+from data_engineering import split
 from data_engineering import manual_transformation
 from config import config_hyperparameter as cfg_hp
 
 
-#########################################################################################
-#####                          Function to load the dataset                         #####
-#########################################################################################
 def load_data(train_dir: str, val_dir: str, num_workers: int, batch_size: int, augmentation: bool,comb_1: bool,comb_2: bool,comb_3: bool,comb_4: bool,comb_5: bool,comb_6: bool,comb_7: bool):
-    # Get the transforms used to create our pretrained weights
+    '''
+    Load the data into data loaders with the choosen transformation function
+    return: dataloaders for training and validation, list of the class names in the dataset
+    '''
+
+    # Load transform function with or without data augmentation
     if augmentation:
         manual_transforms = manual_transformation(comb_1=comb_1,comb_2=comb_2,comb_3=comb_3,comb_4=comb_4,comb_5=comb_5,comb_6=comb_6,comb_7=comb_7)
     else:
-            manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.ToTensor(),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
+        manual_transforms = transforms.Compose([
+                            transforms.Resize((384,384)),
+                            transforms.ToTensor(),
+                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                            ])
  
 
-    # Create training and valing DataLoaders as well as get a list of class names
+    # Create train and validation data loaders as well as get a list of class names
     train_dataloader, val_dataloader, class_names = create_dataloaders(train_dir=train_dir,
                                                                        val_dir=val_dir,
                                                                        transform=manual_transforms,
-                                                                       # perform same data transforms on our own data as the pretrained model
                                                                        batch_size=batch_size,
-                                                                       # set mini-batch size to 32
                                                                        num_workers=num_workers)
 
     return train_dataloader, val_dataloader, class_names
 
 
-#########################################################################################
-#####                          Function to create DataLoader                        #####
-#########################################################################################
 def create_dataloaders(train_dir: str,
                        val_dir: str,
                        transform: transforms.Compose,
                        batch_size: int,
                        num_workers: int = 1
                        ):
+    '''
+    Create train and validation data loaders from Image folders
+    return: Dataloaders for training and validation, list of the class names in the dataset  
+    '''
+
     # Use ImageFolder to create dataset(s)
     train_data = datasets.ImageFolder(train_dir, transform=transform)
     val_data = datasets.ImageFolder(val_dir, transform=transform)
@@ -95,19 +95,22 @@ def create_dataloaders(train_dir: str,
     return train_dataloader, val_dataloader, class_names
 
 
-#########################################################################################
-#####                      Function to load pretrainend model                       #####
-#########################################################################################
 def load_pretrained_model(device, tf_model: bool):
-    # Load best available weights from pretraining on ImageNet
+    '''
+    Load the pretrainind EfficientNet_V2_S pytorch model with or without weights
+    return: model and the pretrained weights
+    '''
+
+    # Load best available weights from pretraining on ImageNet1K dataset
     weights = torchvision.models.EfficientNet_V2_S_Weights.DEFAULT
 
-    # Load pretrained model with selected weights
+    # Load pretrained model with or without weights
     if tf_model:
         model = torchvision.models.efficientnet_v2_s(weights)
     else:
         model = torchvision.models.efficientnet_v2_s()
 
+    # Speed up training
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
     model.to(device)
@@ -115,14 +118,16 @@ def load_pretrained_model(device, tf_model: bool):
     return model, weights
 
 
-#########################################################################################
-#####         Function to recreate the classifier layer of the model                #####
-#########################################################################################
 def recreate_classifier_layer(model: torch.nn.Module, tf_model: bool, dropout: int, class_names: list, seed: int,
                               device):
-    # Freeze all layers except the last 3 in the "features" section of the model 
-    # by setting requires_grad=False
+    '''
+    Recreate the classifier layer of the model that it fits our classification problem
+    The number of trainable layers can be specified in the config file 
+    return: Model
+    '''
 
+    # Freeze all layers except the last [Number of layers specified in the config file] 
+    # by setting requires_grad=False for all other layers. (When training a Transfer Learning model) 
     if tf_model:
         for i in range(7):
             if i == 6:
@@ -139,28 +144,33 @@ def recreate_classifier_layer(model: torch.nn.Module, tf_model: bool, dropout: i
 
     # Recreate the classifier layer (one output unit for each class)
     model.classifier = torch.nn.Sequential(
-        torch.nn.Dropout(p=dropout, inplace=True),
-        torch.nn.Linear(in_features=1280,
-                        out_features=len(class_names),
-                        bias=True)).to(device)
+                                            torch.nn.Dropout(p=dropout, inplace=True),
+                                            torch.nn.Linear(in_features=1280,
+                                            out_features=len(class_names),
+                                            bias=True)
+                                        ).to(device)
 
     return model
 
 
-#########################################################################################
-#####              Function to create a folder for the trained model                #####
-#########################################################################################
 def get_storage_name(targetfolder: str, model_name: str, timestampStr: str):
+    '''
+    Create folder directory for a model. In this folder the model and all associated files
+    return: Directory of the new model
+    '''
+
     folderpath = Path(targetfolder + "/" + model_name + "_model" + "_" + timestampStr)
     folderpath.mkdir(parents=True, exist_ok=True)
 
     return folderpath
 
 
-#########################################################################################
-#####           Function to save the hyperparameters of the trained model           #####
-#########################################################################################
 def store_hyperparameters(target_dir_new_model: str, model_name: str, dict: dict, timestampStr: str):
+    '''
+    Save the hyperparameters of the trained model in the model folder directory
+    return: Directory of the new model
+    '''
+
     folderpath = get_storage_name(target_dir_new_model, model_name, timestampStr)
 
     dict_path = folderpath / ("hyperparameter_dict.pkl")
@@ -169,12 +179,15 @@ def store_hyperparameters(target_dir_new_model: str, model_name: str, dict: dict
     return folderpath
 
 
-#########################################################################################
-#####                     Function to save the trained model                        #####
-#########################################################################################
 def store_model(target_dir_new_model: str, tf_model: bool, model_name: str, hyperparameter_dict: dict,
                 trained_epochs: int, classifier_model: torch.nn.Module, results: dict, batch_size: int,
                 total_train_time: float, timestampStr: str, used_combination: int):
+    '''
+    Store all files related to the model in the model directory. (Hyperparameters, model summary, figures, and results)
+    It also creates or updates a csv-file where all training informations, the model path, and the used hyperparameters are stored 
+    return: Directory of the new model
+    '''
+
     logger.info("Store model, results and hyperparameters...")
 
     folderpath = store_hyperparameters(target_dir_new_model, model_name, hyperparameter_dict, timestampStr)
@@ -182,7 +195,6 @@ def store_model(target_dir_new_model: str, tf_model: bool, model_name: str, hype
     results_path = folderpath / ("results.pkl")
     summary_path = folderpath / ("summary.pkl")
 
-    # Print a summary using torchinfo (uncomment for actual output)
     model_summary = summary(model=classifier_model,
                             input_size=(batch_size, 3, 224, 224),  # make sure this is "input_size", not "input_shape"
                             col_names=["input_size", "output_size", "num_params", "trainable"],
@@ -254,12 +266,16 @@ def store_model(target_dir_new_model: str, tf_model: bool, model_name: str, hype
     return folderpath
 
 
-#########################################################################################
-#####                          Function to load the model                           #####
-#########################################################################################
 def get_model(model_folder: str):
+    '''
+    Load a trained model and all other imformations from an existing model directory 
+    return: Model, results, directory, and summary
+    '''
+    
+    #Get all file names
     onlyfiles = [f for f in listdir(model_folder) if isfile(join(model_folder, f))]
 
+    #Get directories
     model_path = Path(model_folder) / onlyfiles[1]
     results_path = Path(model_folder) / onlyfiles[2]
     hyperparameters_path = Path(model_folder) / onlyfiles[0]
@@ -286,18 +302,12 @@ def get_model(model_folder: str):
     return classifier_model, results, dict, summary
 
 
-#########################################################################################
-#####             Function for plotting the loss curve and the accuracy             #####
-#########################################################################################
 def plot_loss_acc_curves(model_folder: str):
-    """Plots training curves of a results dictionary.
-    Args:
-        results (dict): dictionary containing list of values, e.g.
-            {"train_loss": [...],
-             "train_acc": [...],
-             "val_loss": [...],
-             "val_acc": [...]}
-    """
+    '''
+    Plots training curves of a results dictionary and saves figures into model directory
+    return: Nothing
+    '''
+
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
     loss = model_results["train_loss"]
     val_loss = model_results["val_loss"]
@@ -332,15 +342,17 @@ def plot_loss_acc_curves(model_folder: str):
     plt.show()
 
 
-#########################################################################################
-#####        Function to make predictions on images from validation set             #####
-#########################################################################################
 def pred_and_plot_image(model: torch.nn.Module,
                         image_path: str,
                         class_names: List[str] = None,
                         transform=None,
                         ax=None,
                         ):
+    '''
+    Make predictions on images and plot the image with the prediction
+    return: nothing
+    '''
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Load in image and convert the tensor values to float32
@@ -350,10 +362,11 @@ def pred_and_plot_image(model: torch.nn.Module,
     target_image = target_image / 255
 
     # Transform if necessary
-    #if transform:
-    #   target_image = transform(target_image)
+    if transform:
+       target_image = transform(target_image)
 
     model.to(device)
+
     # Turn on model evaluation mode and inference mode
     model.eval()
     with torch.inference_mode():
@@ -372,9 +385,7 @@ def pred_and_plot_image(model: torch.nn.Module,
 
     if ax is None:
         # Plot the image alongside the prediction and prediction probability
-        plt.imshow(
-            target_image.squeeze().permute(1, 2, 0)
-        )  # make sure it's the right size for matplotlib
+        plt.imshow(target_image.squeeze().permute(1, 2, 0)) 
         if class_names:
             title = f"Pred: {class_names[target_image_pred_label.cpu()]} | Prob: {target_image_pred_probs.max().cpu():.3f}"
         else:
@@ -391,9 +402,7 @@ def pred_and_plot_image(model: torch.nn.Module,
                             wspace=0.4,
                             hspace=0.4)
         # Plot the image alongside the prediction and prediction probability
-        ax.imshow(
-            target_image.squeeze().permute(1, 2, 0)
-        )  # make sure it's the right size for matplotlib
+        ax.imshow(target_image.squeeze().permute(1, 2, 0)) 
         if class_names:
             title = f"Pred: {class_names[target_image_pred_label.cpu()]} | Prob: {target_image_pred_probs.max().cpu():.3f}"
         else:
@@ -403,29 +412,31 @@ def pred_and_plot_image(model: torch.nn.Module,
         plt.draw()
 
 
-#########################################################################################
-#####                 Function to make predictions on single images                 #####
-#########################################################################################
 def pred_on_single_image(image_path: str, model_folder: str):
-    class_names = ['paper', 'rock', 'scissors']
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    '''
+    Make predictions on a single images and plot the images with the prediction
+    return: Nothing
+    '''
 
+    class_names = ['paper', 'rock', 'scissors']
 
     manual_transforms = transforms.Compose([
-            transforms.Resize((384, 384)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ])
+                                            transforms.Resize((384, 384)),
+                                            transforms.ToTensor(),
+                                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                        ])
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
 
     pred_and_plot_image(trained_model, image_path, class_names, manual_transforms)
 
 
-#########################################################################################
-#####                     Function to evaluate an existing model                    #####
-#########################################################################################
 def pred_on_example_images(model_folder: str, image_folder: str, num_images: int):
+    '''
+    Make predictions on [num_images] images and plot the images with the prediction
+    return: Nothing
+    '''
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
@@ -433,17 +444,15 @@ def pred_on_example_images(model_folder: str, image_folder: str, num_images: int
     # Make predictions on random images from validation dataset
     class_names = ['paper', 'rock', 'scissors']
 
-
     manual_transforms = transforms.Compose([
-            transforms.Resize((384, 384)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ])
+                                            transforms.Resize((384, 384)),
+                                            transforms.ToTensor(),
+                                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                        ])
 
     valid_image_path_list = list(Path(image_folder).glob("*/*.*"))  # get list all image paths from val data
     valid_image_path_sample = random.sample(population=valid_image_path_list,  # go through all of the val image paths
                                             k=num_images)  # randomly select 'k' image paths to pred and plot
-
     font = {'family': 'normal',
             'weight': 'bold',
             'size': 12}
@@ -458,6 +467,7 @@ def pred_on_example_images(model_folder: str, image_folder: str, num_images: int
                             transform=manual_transforms,
                             ax=ax,
                             device=device)
+        
     if num_images % 2 != 0:
         fig.delaxes(axes[math.ceil(num_images / 2) - 1, 1])
     plt.tight_layout()
@@ -465,13 +475,20 @@ def pred_on_example_images(model_folder: str, image_folder: str, num_images: int
     plt.savefig(model_folder)
 
 
-#########################################################################################
-#####                    Functions to test model on unseen data                     #####
-#########################################################################################
 def test_model(model_folder, test_folder):
+    '''
+    Test a model on the images in the test_folder directory. It also prints the test accuracy
+    and plots and saves the confusion matrix
+    return: Nothin
+    '''
+
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
+    
+    #Create list of all images 
     image_path_list = list(Path(test_folder).glob("*/*.*"))
     class_names = ['paper', 'rock', 'scissors']
+    
+    #Empty lists for the accuracy calculation
     accuracy = []
     predictions = []
     y_test = []
@@ -484,9 +501,9 @@ def test_model(model_folder, test_folder):
         target_image = target_image / 255
         
         manual_transforms = transforms.Compose([
-                                transforms.Resize((384,384)),
-                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                ])
+                                                transforms.Resize((384,384)),
+                                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                                ])
 
         # Transform if necessary
         target_image = manual_transforms(target_image)
@@ -506,6 +523,8 @@ def test_model(model_folder, test_folder):
 
         # Convert prediction probabilities -> prediction labels
         target_image_pred_label = torch.argmax(target_image_pred_probs, dim=1)
+
+        #Fill empty lists for accuracy calculation
         pred_class = class_names[target_image_pred_label.item()]
         true_class = image_path.parts[2]
         predictions.append(target_image_pred_label.item())
@@ -523,15 +542,17 @@ def test_model(model_folder, test_folder):
     print("Accuracy on test set: " + str(sum(accuracy) / len(accuracy) * 100) + " %")
 
 
-#########################################################################################
-#####                Functions to train the transfer learning model                 #####
-#########################################################################################
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer,
                device
                ) -> Tuple[float, float]:
+    '''
+    Train step for the selected model (Baseline or Transfer Learning model) and calculating the train loss
+    return: Train loss
+    '''
+
     # Put model in train mode
     model.train()
 
@@ -573,6 +594,10 @@ def val_step(model: torch.nn.Module,
              loss_fn: torch.nn.Module,
              device
              ) -> Tuple[float, float]:
+    '''
+    Validation step for the selected model (Baseline or Transfer Learning model) and calculating the validation loss
+    return: Validation loss
+    '''
     # Put model in eval mode
     model.eval()
 
@@ -616,6 +641,12 @@ def train(target_dir_new_model: str,
           used_combination: int,
           device
           ) -> Dict[str, List]:
+    '''
+    Iteration over each epoch for training and validation of the select model. It also calls early stopping if the model
+    does not improve over [patience] number of epochs.
+    return: Results and the directory of the new trained model
+    '''
+
     # Create empty results dictionary
     results = {"train_loss": [],
                "train_acc": [],
@@ -634,6 +665,7 @@ def train(target_dir_new_model: str,
     max_acc = 0
     trained_epochs = 0
     model_folder = ''
+
     # Loop through training and valing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
         trained_epochs = epoch + 1
@@ -687,11 +719,17 @@ def train(target_dir_new_model: str,
         else:
             continue
 
-    # Return the filled results at the end of the epochs
     return results, model_folder
 
 
 def train_new_model(dataset_path: str, tf_model: bool, activate_augmentation: bool,comb_1: bool,comb_2: bool,comb_3: bool,comb_4: bool,comb_5: bool,comb_6: bool,comb_7: bool):
+    '''
+    Initializes the directories of the dataset, stores the selected model type, chooses the availabe device, initialize the model,
+    loads the data, adjustes the last layer of the model architecture, Initializes the loss and the optimizer, sets seeds. 
+    creates a dictionary to store the used hyperparameters, grid search hyperparameter tuning, excecutes the training process
+    return: The directory of the new trained model
+    '''
+    
     train_dir = dataset_path + "/train"
     val_dir = dataset_path + "/val"
     target_dir_new_model = 'models'
