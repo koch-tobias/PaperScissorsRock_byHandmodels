@@ -76,9 +76,13 @@ These following options are available:
     c) Run the main.py file again </br>
   7. Use LIME to see the areas which the model used to make the prediction: </br>
     a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
-    b) Change the path for the variable "single_image_path" to your image you want to evaluate   
-    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False 
-
+    b) Change the path for the variable "single_image_path" to your image you want to evaluate </br> 
+    c) Set the boole variable "LIME_single_Image" = True, all other boole variables = False </br>
+  7. Use saliency to see the areas which the model used to make the prediction: </br>
+    a) Change the path of the variable "model_folder" to the model you want to evaluate </br>
+    b) Change the path for the variable "single_image_path" to your image you want to evaluate </br>
+    c) Set the boole variable "saliency" = True, all other boole variables = False </br>
+    
 ## Dataset
 For our project we combined the following five subdatasets:
 - [Roboflow Dataset](https://public.roboflow.com/classification/rock-paper-scissors) with 2925 images
