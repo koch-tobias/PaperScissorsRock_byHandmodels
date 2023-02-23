@@ -4,7 +4,7 @@ from model_engineering import pred_on_example_images
 from model_engineering import pred_on_single_image
 from model_engineering import test_model
 from data_engineering import rgba_to_rgb
-from model_evaluation import print_model_metrices, Lime
+from model_evaluation import print_model_metrices, Explainability
 from loguru import logger
 
 if __name__ == "__main__":
@@ -27,6 +27,7 @@ if __name__ == "__main__":
     model_metrices = False
     LIME_single_Image = False
     activate_Augmentation = False
+    saliency = False
 
     #Set max one combination=True for training the model with data augmention. 
     #Set activate_Augmentation=False means training without data augmentation
@@ -67,7 +68,10 @@ if __name__ == "__main__":
 
     if LIME_single_Image:
         logger.info("Start using LIME on given image...")
-        LimeInstance = Lime(model_folder=model_folder)
-        LimeInstance.single_image_LIME(img_path= single_image_path)
+        ExplainabilityInstance = Explainability(model_folder=model_folder)
+        ExplainabilityInstance.single_image_LIME(img_path= single_image_path)
 
-
+    if saliency:
+        logger.info("Start building Saliency Heatmap on given image...")
+        ExplainabilityInstance = Explainability(model_folder=model_folder)
+        ExplainabilityInstance.saliency_img(img_path= single_image_path)

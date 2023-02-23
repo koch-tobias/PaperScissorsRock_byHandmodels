@@ -18,7 +18,7 @@ from pathlib import Path
 from data_engineering import manual_transformation_augmentation
 
 
-class Lime:
+class Explainability:
     def __init__(self, model_folder):
         self.model_folder = model_folder
 
@@ -69,17 +69,84 @@ class Lime:
         explainer = lime_image.LimeImageExplainer()
         explanation = explainer.explain_instance(image=np.array(pill_transf(img)),
                                                  classifier_fn=self.batch_predict,  # classification function
-                                                 top_labels=3,
                                                  hide_color=0,
                                                  num_samples=1000)  # number of images that will be sent to classification function
 
         # %%
+        # create figure
+        fig = plt.figure(figsize=(13, 9))
+        fig.add_subplot(1 , 2, 1)
+        #original image
+        plt.imshow(pill_transf(self.get_image(img_path)))
+        plt.axis('off')
+        plt.title("Original")
+
+        # code to plot the saliency map as a heatmap
+        fig.add_subplot(1 , 2, 2)
+
         temp, mask = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=3,
                                                     hide_rest=False)
         img_boundry1 = mark_boundaries(temp, mask)
         plt.imshow(img_boundry1)
+        plt.axis('off')
+        plt.title("LIME")
+        plt.savefig('images/data_evaluation/LIME.png')
         plt.show()
 
+    def saliency_img(self, img_path):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        # Load in image and convert the tensor values to float32
+        target_image = torchvision.io.read_image(str(img_path)).type(torch.float32)
+
+        # Divide the image pixel values by 255 to get them between [0, 1]
+        target_image = target_image / 255
+
+        model, model_results, dict_hyperparameters, summary = get_model(self.model_folder)
+        model.to(device)
+        model.eval()
+
+        with torch.inference_mode():
+            # Add an extra dimension to the image
+            target_image = target_image.unsqueeze(dim=0)
+
+        # we need to find the gradient with respect to the input image, so we need to call requires_grad_ on it
+        target_image.requires_grad_()
+
+        # Make a prediction on image with an extra dimension
+        scores = model(target_image.to(device))
+
+        # Get the index corresponding to the maximum score and the maximum score itself.
+        score_max_index = scores.argmax()
+        score_max = scores[0, score_max_index]
+
+        # backward function on score_max performs the backward pass in the computation graph and calculates the
+        # gradient of score_max with respect to nodes in the computation graph
+
+        score_max.backward()
+        # Saliency would be the gradient with respect to the input image now. But note that the input image has 3
+        # channels, R, G and B. To derive a single class saliency value for each pixel (i, j),  we take the maximum
+        # magnitude across all colour channels.
+
+
+        saliency, _ = torch.max(target_image.grad.data.abs(),dim=1)
+
+        # create figure
+        fig = plt.figure(figsize=(13, 9))
+        fig.add_subplot(1 , 2, 1)
+        #original image
+        plt.imshow(self.get_image(img_path))
+        plt.axis('off')
+        plt.title("Original")
+
+        # code to plot the saliency map as a heatmap
+        fig.add_subplot(1 , 2, 2)
+        plt.imshow(saliency[0], cmap=plt.cm.hot)
+        plt.axis('off')
+        plt.title("Saliency Map")
+
+        plt.savefig('images/data_evaluation/saliency.png')
+        plt.show()
 
 def print_model_metrices(model_folder, test_folder):
     trained_model, model_results, dict_hyperparameters, summary = get_model(Path(model_folder))
@@ -131,10 +198,10 @@ def print_model_metrices(model_folder, test_folder):
 
     ConfusionMatrixDisplay.from_predictions(y_test, predictions, display_labels=class_names, cmap='Blues',
                                             colorbar=False)
-    plt.savefig(model_folder + '/test_confusion_matrix.png')
+    plt.savefig('images/data_evaluation/confusion_matrix.png')
     plt.show()
 
-    print("Accuracy on test set: " + str(sum(accuracy) / len(accuracy) * 100) + " %")
+    print("Accuracy on test set: " + str(accuracy_score(y_test, predictions) * 100) + " %")
     print("Precision on test set " + str(precision_score(y_test, predictions, average='macro')))
     print("Recall on test set " + str(recall_score(y_test, predictions, average='macro')))
     print("F1 Score on test set " + str(f1_score(y_test, predictions, average='macro')))
