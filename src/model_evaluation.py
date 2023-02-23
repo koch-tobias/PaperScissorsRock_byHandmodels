@@ -3,7 +3,7 @@
 #####Can interpretable model-agnostic explanations (LIME) make our CNN models for Rock, Paper, Scissors more explainable?
 ###########################################
 import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay, precision_score, f1_score, recall_score
+from sklearn.metrics import ConfusionMatrixDisplay, precision_score, f1_score, recall_score, accuracy_score
 from PIL import Image
 import numpy as np
 import os
@@ -15,8 +15,6 @@ from model_engineering import get_model
 from lime import lime_image
 from skimage.segmentation import mark_boundaries
 from pathlib import Path
-from data_engineering import manual_transformation_augmentation
-
 
 class Explainability:
     def __init__(self, model_folder):
@@ -205,4 +203,3 @@ def print_model_metrices(model_folder, test_folder):
     print("Precision on test set " + str(precision_score(y_test, predictions, average='macro')))
     print("Recall on test set " + str(recall_score(y_test, predictions, average='macro')))
     print("F1 Score on test set " + str(f1_score(y_test, predictions, average='macro')))
-    # print("Log-Loss on test set " + str(log_loss(y_test, predictions)))
