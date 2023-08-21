@@ -605,7 +605,7 @@ def val_step(model: torch.nn.Module,
     val_loss, val_acc = 0, 0
 
     # Turn on inference context manager
-    with torch.inference_mode():
+    with torch.no_grad()::
         # Loop through DataLoader batches
         for batch, (X, y) in enumerate(dataloader):
             X, y = X.to(device), y.to(device)
